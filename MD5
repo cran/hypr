@@ -1,0 +1,14 @@
+e27e8e41c0130f979677302ca2e4c474 *DESCRIPTION
+a8a787ccf1d7815255b67b84578a702d *NAMESPACE
+ecbb5d26d0acf7ef7e38a61b06f603f0 *R/equations.R
+a907a523a0bc9ad8f8db3929c5ddd69d *R/hello.R
+aba5341174ddba149279eac278f1d5e2 *R/hypr.R
+f7d1f05af0d6872176add3f89a205c5a *README.md
+4abf8a21ea807754dbe802c9679f7eca *inst/CITATION
+e9656dac76e21c354a292f3150bed763 *man/cmat.Rd
+7ad7af13a93a1494ae4498b89f294db2 *man/conversions.Rd
+8ec4bd4224e5d57a237457185ad5be95 *man/formula-set.Rd
+28e4b3061ad773facfc6ff949a1a5ef3 *man/ginv2.Rd
+5509f6b67ca49d468fbe3382119ae221 *man/hmat.Rd
+ee072765fd86bb5c6599314169d8512a *man/hypr-class.Rd
+9438bac3d06f614f40fa584052defffb *man/hypr.Rd
