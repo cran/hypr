@@ -30,7 +30,7 @@ contrasts(simdat$X)
 round(coef(summary(lm(DV ~ X, data=simdat))), 3)
 
 ## ------------------------------------------------------------------------
-sumC <- hypr((mu1+mu2+mu3+mu4)/4~0, (3*mu1-mu2-mu3-mu4)/4~0, (3*mu2-mu1-mu3-mu4)/4~0, (3*mu3-mu1-mu2-mu4)/4~0)
+sumC <- hypr(mu1 ~ (mu1+mu2+mu3+mu4)/4, mu2 ~ (mu1+mu2+mu3+mu4)/4, mu3 ~ (mu1+mu2+mu3+mu4)/4)
 sumC
 
 ## ------------------------------------------------------------------------
@@ -39,10 +39,9 @@ contrasts(simdat$X)
 
 ## ------------------------------------------------------------------------
 contrasts(simdat$X) <- contr.hypothesis(
-  (mu1+mu2+mu3+mu4)/4~0, 
-  (3*mu1-mu2-mu3-mu4)/4~0, 
-  (3*mu2-mu1-mu3-mu4)/4~0, 
-  (3*mu3-mu1-mu2-mu4)/4~0
+  mu1 ~ (mu1+mu2+mu3+mu4)/4, 
+  mu2 ~ (mu1+mu2+mu3+mu4)/4, 
+  mu3 ~ (mu1+mu2+mu3+mu4)/4
 )
 contrasts(simdat$X)
 

@@ -12,6 +12,12 @@ trtC <- hypr(base = mu0~0, trt1 = mu1~mu0, trt2 = mu2~mu0, trt3 = mu3~mu0)
 trtC
 
 ## ------------------------------------------------------------------------
+hypr(one~0, two~one, three~one, four~one, levels = c("one", "two", "three", "four"))
+
+## ------------------------------------------------------------------------
+hypr(one~0, two~one, three~one, four~one, levels = c("one", "two", "three", "four", "five"))
+
+## ------------------------------------------------------------------------
 formula(trtC) # a list of equations
 levels(trtC) # a vector of corresponding factor levels (variables in equations)
 names(trtC) # a vector of corresponding contrast names
@@ -38,7 +44,7 @@ cmat(helC)
 #  cmat(helC, remove_intercept = TRUE) # throws an error
 
 ## ------------------------------------------------------------------------
-contr.hypothesis(trtC) # removes column `base` column
+contr.hypothesis(trtC) # removes `base` column
 contr.hypothesis(helC) # removes nothing
 
 ## ------------------------------------------------------------------------

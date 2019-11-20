@@ -32,7 +32,7 @@ The `hypr()` function accepts any set of null hypothesis equations as comma-sepa
 trtC <- hypr(mu1~0, mu2~mu1, mu3~mu1, mu4~mu1)
 ```
 
-If you want to provide names for contrasts, you can name the function arguments as follows but this is totally optional:
+If you want to provide names for contrasts, you can name the function arguments as follows but this is optional:
 
 ```{r}
 trtC <- hypr(base = mu0~0, trt1 = mu1~mu0, trt2 = mu2~mu0, trt3 = mu3~mu0)
@@ -44,6 +44,22 @@ When calling this function, a `hypr` object named `trtC` is generated which cont
 ```{r}
 trtC
 ```
+
+As you can see, the level names in `hypr` objects are automatically derived from the hypotheses and sorted alphabetically. You may also provide a different sorting by explicitly providing level names for the `levels` argument:
+
+```{r}
+hypr(one~0, two~one, three~one, four~one, levels = c("one", "two", "three", "four"))
+```
+
+In the example above, a `hypr` object is created in which the hypothesis and contrast matrices are ordered `one`, `two`, `three`, `four`. If `levels` was not provided, the matrices in the resulting object would be ordered alphabetically, i.e. `four`, `one`, `three`, `two`.
+
+The character vector passed as the `levels` argument must contain all levels named in the hypotheses. If it does not, an error will be thrown. However, it *may* contain level names that are not named in any of the null hypotheses. This will expand the hypothesis and contrast matrices by that level but not affect the coding of the other levels:
+
+```{r}
+hypr(one~0, two~one, three~one, four~one, levels = c("one", "two", "three", "four", "five"))
+```
+
+## Using and manipulating hypr objects
 
 These properties can also be directly accessed with the appropriate methods:
 
@@ -96,7 +112,7 @@ cmat(helC, remove_intercept = TRUE) # throws an error
 Therefore, when you are unsure whether to set `remove_intercept` to `TRUE` or `FALSE` (default) but would like to use the sensible default of removing an intercept when there is one, you can set `remove_intercept=NULL`. A useful wrapper function which uses this as a default is `contr.hypothesis`:
 
 ```{r}
-contr.hypothesis(trtC) # removes column `base` column
+contr.hypothesis(trtC) # removes `base` column
 contr.hypothesis(helC) # removes nothing
 ```
 

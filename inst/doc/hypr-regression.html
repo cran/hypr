@@ -103,7 +103,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><a href="#background">Background</a></li>
 <li><a href="#simulated-dataset">Simulated dataset</a></li>
 <li><a href="#example-treatment-contrasts">Example: Treatment contrasts</a></li>
-<li><a href="#example-effect-coding">Example: Effect coding</a></li>
+<li><a href="#example-sum-contrast-coding">Example: Sum contrast coding</a></li>
 </ul>
 </div>
 
@@ -195,37 +195,35 @@ H_{0_4}:&amp; \; \mu_4 = \mu_1
 ## X3                30      6.325   4.743    0.000</code></pre>
 <p>The linear regression returns the expected estimates: The intercept is the baseline condition and the three main effects are the differences between the baseline and the three conditions.</p>
 </div>
-<div id="example-effect-coding" class="section level2">
-<h2>Example: Effect coding</h2>
+<div id="example-sum-contrast-coding" class="section level2">
+<h2>Example: Sum contrast coding</h2>
 <p>A sum contrast, such as used for ANOVA, with four levels could generate the following null hypotheses:</p>
 <span class="math display">\[\begin{align}
-H_{0_1}:&amp; \; 0 = \frac{\mu_1 + \mu_2 + \mu_3 + \mu_4}{4} \\
-H_{0_2}:&amp; \; 0 = \frac{3 \mu_1 - \mu_2 + \mu_3 + \mu_4}{4} \\
-H_{0_3}:&amp; \; 0 = \frac{3 \mu_2 - \mu_1 + \mu_3 + \mu_4}{4} \\
-H_{0_4}:&amp; \; 0 = \frac{3 \mu_3 - \mu_1 + \mu_2 + \mu_4}{4}
+H_{0_1}:&amp; \; \mu_1 = \frac{\mu_1 + \mu_2 + \mu_3 + \mu_4}{4} \\
+H_{0_2}:&amp; \; \mu_2 = \frac{\mu_1 + \mu_2 + \mu_3 + \mu_4}{4} \\
+H_{0_3}:&amp; \; \mu_3 = \frac{\mu_1 + \mu_2 + \mu_3 + \mu_4}{4}
 \end{align}\]</span>
 <p>We rewrite them into <code>hypr</code>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sumC &lt;-<span class="st"> </span><span class="kw">hypr</span>((mu1<span class="op">+</span>mu2<span class="op">+</span>mu3<span class="op">+</span>mu4)<span class="op">/</span><span class="dv">4</span><span class="op">~</span><span class="dv">0</span>, (<span class="dv">3</span><span class="op">*</span>mu1<span class="op">-</span>mu2<span class="op">-</span>mu3<span class="op">-</span>mu4)<span class="op">/</span><span class="dv">4</span><span class="op">~</span><span class="dv">0</span>, (<span class="dv">3</span><span class="op">*</span>mu2<span class="op">-</span>mu1<span class="op">-</span>mu3<span class="op">-</span>mu4)<span class="op">/</span><span class="dv">4</span><span class="op">~</span><span class="dv">0</span>, (<span class="dv">3</span><span class="op">*</span>mu3<span class="op">-</span>mu1<span class="op">-</span>mu2<span class="op">-</span>mu4)<span class="op">/</span><span class="dv">4</span><span class="op">~</span><span class="dv">0</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sumC &lt;-<span class="st"> </span><span class="kw">hypr</span>(mu1 <span class="op">~</span><span class="st"> </span>(mu1<span class="op">+</span>mu2<span class="op">+</span>mu3<span class="op">+</span>mu4)<span class="op">/</span><span class="dv">4</span>, mu2 <span class="op">~</span><span class="st"> </span>(mu1<span class="op">+</span>mu2<span class="op">+</span>mu3<span class="op">+</span>mu4)<span class="op">/</span><span class="dv">4</span>, mu3 <span class="op">~</span><span class="st"> </span>(mu1<span class="op">+</span>mu2<span class="op">+</span>mu3<span class="op">+</span>mu4)<span class="op">/</span><span class="dv">4</span>)
 sumC</code></pre></div>
-<pre><code>## hypr object containing 4 null hypotheses:
-## H0.1: 0 = 1/4*mu1 + 1/4*mu2 + 1/4*mu3 + 1/4*mu4
-## H0.2: 0 = 3/4*mu1 - 1/4*mu2 - 1/4*mu3 - 1/4*mu4
-## H0.3: 0 = 3/4*mu2 - 1/4*mu1 - 1/4*mu3 - 1/4*mu4
-## H0.4: 0 = 3/4*mu3 - 1/4*mu1 - 1/4*mu2 - 1/4*mu4
+<pre><code>## hypr object containing 3 null hypotheses:
+## H0.1: 0 = 3/4*mu1 - 1/4*mu2 - 1/4*mu3 - 1/4*mu4
+## H0.2: 0 = 3/4*mu2 - 1/4*mu1 - 1/4*mu3 - 1/4*mu4
+## H0.3: 0 = 3/4*mu3 - 1/4*mu1 - 1/4*mu2 - 1/4*mu4
 ## 
 ## Hypothesis matrix (transposed):
-##     [,1] [,2] [,3] [,4]
-## mu1  1/4  3/4 -1/4 -1/4
-## mu2  1/4 -1/4  3/4 -1/4
-## mu3  1/4 -1/4 -1/4  3/4
-## mu4  1/4 -1/4 -1/4 -1/4
+##     [,1] [,2] [,3]
+## mu1  3/4 -1/4 -1/4
+## mu2 -1/4  3/4 -1/4
+## mu3 -1/4 -1/4  3/4
+## mu4 -1/4 -1/4 -1/4
 ## 
 ## Contrast matrix:
-##     [,1] [,2] [,3] [,4]
-## mu1  1    1    0    0  
-## mu2  1    0    1    0  
-## mu3  1    0    0    1  
-## mu4  1   -1   -1   -1</code></pre>
+##     [,1] [,2] [,3]
+## mu1  1    0    0  
+## mu2  0    1    0  
+## mu3  0    0    1  
+## mu4 -1   -1   -1</code></pre>
 <p>We next assign the contrast matrix to the factor <code>X</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">contrasts</span>(simdat<span class="op">$</span>X) &lt;-<span class="st"> </span><span class="kw">contr.hypothesis</span>(sumC)
 <span class="kw">contrasts</span>(simdat<span class="op">$</span>X)</code></pre></div>
@@ -236,10 +234,9 @@ sumC</code></pre></div>
 ## X4   -1   -1   -1</code></pre>
 <p>Without creating the intermediate <code>hypr</code> object, you can also set the contrasts directly like this:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">contrasts</span>(simdat<span class="op">$</span>X) &lt;-<span class="st"> </span><span class="kw">contr.hypothesis</span>(
-  (mu1<span class="op">+</span>mu2<span class="op">+</span>mu3<span class="op">+</span>mu4)<span class="op">/</span><span class="dv">4</span><span class="op">~</span><span class="dv">0</span>, 
-  (<span class="dv">3</span><span class="op">*</span>mu1<span class="op">-</span>mu2<span class="op">-</span>mu3<span class="op">-</span>mu4)<span class="op">/</span><span class="dv">4</span><span class="op">~</span><span class="dv">0</span>, 
-  (<span class="dv">3</span><span class="op">*</span>mu2<span class="op">-</span>mu1<span class="op">-</span>mu3<span class="op">-</span>mu4)<span class="op">/</span><span class="dv">4</span><span class="op">~</span><span class="dv">0</span>, 
-  (<span class="dv">3</span><span class="op">*</span>mu3<span class="op">-</span>mu1<span class="op">-</span>mu2<span class="op">-</span>mu4)<span class="op">/</span><span class="dv">4</span><span class="op">~</span><span class="dv">0</span>
+  mu1 <span class="op">~</span><span class="st"> </span>(mu1<span class="op">+</span>mu2<span class="op">+</span>mu3<span class="op">+</span>mu4)<span class="op">/</span><span class="dv">4</span>, 
+  mu2 <span class="op">~</span><span class="st"> </span>(mu1<span class="op">+</span>mu2<span class="op">+</span>mu3<span class="op">+</span>mu4)<span class="op">/</span><span class="dv">4</span>, 
+  mu3 <span class="op">~</span><span class="st"> </span>(mu1<span class="op">+</span>mu2<span class="op">+</span>mu3<span class="op">+</span>mu4)<span class="op">/</span><span class="dv">4</span>
 )
 <span class="kw">contrasts</span>(simdat<span class="op">$</span>X)</code></pre></div>
 <pre><code>##    [,1] [,2] [,3]

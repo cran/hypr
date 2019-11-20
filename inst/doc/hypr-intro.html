@@ -102,6 +102,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <ul>
 <li><a href="#background">Background</a></li>
 <li><a href="#creating-a-hypr-object">Creating a hypr object</a></li>
+<li><a href="#using-and-manipulating-hypr-objects">Using and manipulating hypr objects</a></li>
 <li><a href="#deriving-contrasts">Deriving contrasts</a></li>
 </ul>
 </div>
@@ -114,7 +115,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h2>Creating a hypr object</h2>
 <p>The <code>hypr()</code> function accepts any set of null hypothesis equations as comma-separated arguments. An empty <code>hypr</code> object can be created by calling the function without arguments, i.e. empty parantheses.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">trtC &lt;-<span class="st"> </span><span class="kw">hypr</span>(mu1<span class="op">~</span><span class="dv">0</span>, mu2<span class="op">~</span>mu1, mu3<span class="op">~</span>mu1, mu4<span class="op">~</span>mu1)</code></pre></div>
-<p>If you want to provide names for contrasts, you can name the function arguments as follows but this is totally optional:</p>
+<p>If you want to provide names for contrasts, you can name the function arguments as follows but this is optional:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">trtC &lt;-<span class="st"> </span><span class="kw">hypr</span>(<span class="dt">base =</span> mu0<span class="op">~</span><span class="dv">0</span>, <span class="dt">trt1 =</span> mu1<span class="op">~</span>mu0, <span class="dt">trt2 =</span> mu2<span class="op">~</span>mu0, <span class="dt">trt3 =</span> mu3<span class="op">~</span>mu0)</code></pre></div>
 <p>When calling this function, a <code>hypr</code> object named <code>trtC</code> is generated which contains all four hypotheses from above as well as the hypothesis and contrast matrices derived from those. We can display a summary like any other object in R:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">trtC</code></pre></div>
@@ -137,6 +138,54 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 ## mu1 1    1    0    0   
 ## mu2 1    0    1    0   
 ## mu3 1    0    0    1</code></pre>
+<p>As you can see, the level names in <code>hypr</code> objects are automatically derived from the hypotheses and sorted alphabetically. You may also provide a different sorting by explicitly providing level names for the <code>levels</code> argument:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">hypr</span>(one<span class="op">~</span><span class="dv">0</span>, two<span class="op">~</span>one, three<span class="op">~</span>one, four<span class="op">~</span>one, <span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;one&quot;</span>, <span class="st">&quot;two&quot;</span>, <span class="st">&quot;three&quot;</span>, <span class="st">&quot;four&quot;</span>))</code></pre></div>
+<pre><code>## hypr object containing 4 null hypotheses:
+## H0.1: 0 = one
+## H0.2: 0 = two - one
+## H0.3: 0 = three - one
+## H0.4: 0 = four - one
+## 
+## Hypothesis matrix (transposed):
+##       [,1] [,2] [,3] [,4]
+## one    1   -1   -1   -1  
+## two    0    1    0    0  
+## three  0    0    1    0  
+## four   0    0    0    1  
+## 
+## Contrast matrix:
+##       [,1] [,2] [,3] [,4]
+## one   1    0    0    0   
+## two   1    1    0    0   
+## three 1    0    1    0   
+## four  1    0    0    1</code></pre>
+<p>In the example above, a <code>hypr</code> object is created in which the hypothesis and contrast matrices are ordered <code>one</code>, <code>two</code>, <code>three</code>, <code>four</code>. If <code>levels</code> was not provided, the matrices in the resulting object would be ordered alphabetically, i.e. <code>four</code>, <code>one</code>, <code>three</code>, <code>two</code>.</p>
+<p>The character vector passed as the <code>levels</code> argument must contain all levels named in the hypotheses. If it does not, an error will be thrown. However, it <em>may</em> contain level names that are not named in any of the null hypotheses. This will expand the hypothesis and contrast matrices by that level but not affect the coding of the other levels:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">hypr</span>(one<span class="op">~</span><span class="dv">0</span>, two<span class="op">~</span>one, three<span class="op">~</span>one, four<span class="op">~</span>one, <span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;one&quot;</span>, <span class="st">&quot;two&quot;</span>, <span class="st">&quot;three&quot;</span>, <span class="st">&quot;four&quot;</span>, <span class="st">&quot;five&quot;</span>))</code></pre></div>
+<pre><code>## hypr object containing 4 null hypotheses:
+## H0.1: 0 = one
+## H0.2: 0 = two - one
+## H0.3: 0 = three - one
+## H0.4: 0 = four - one
+## 
+## Hypothesis matrix (transposed):
+##       [,1] [,2] [,3] [,4]
+## one    1   -1   -1   -1  
+## two    0    1    0    0  
+## three  0    0    1    0  
+## four   0    0    0    1  
+## five   0    0    0    0  
+## 
+## Contrast matrix:
+##       [,1] [,2] [,3] [,4]
+## one   1    0    0    0   
+## two   1    1    0    0   
+## three 1    0    1    0   
+## four  1    0    0    1   
+## five  0    0    0    0</code></pre>
+</div>
+<div id="using-and-manipulating-hypr-objects" class="section level2">
+<h2>Using and manipulating hypr objects</h2>
 <p>These properties can also be directly accessed with the appropriate methods:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">formula</span>(trtC) <span class="co"># a list of equations</span></code></pre></div>
 <pre><code>## $base
@@ -224,7 +273,7 @@ otherC</code></pre></div>
 <p>Setting <code>remove_intercept=TRUE</code> would throw an error because the function cannot find the intercept column.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cmat</span>(helC, <span class="dt">remove_intercept =</span> <span class="ot">TRUE</span>) <span class="co"># throws an error</span></code></pre></div>
 <p>Therefore, when you are unsure whether to set <code>remove_intercept</code> to <code>TRUE</code> or <code>FALSE</code> (default) but would like to use the sensible default of removing an intercept when there is one, you can set <code>remove_intercept=NULL</code>. A useful wrapper function which uses this as a default is <code>contr.hypothesis</code>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">contr.hypothesis</span>(trtC) <span class="co"># removes column `base` column</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">contr.hypothesis</span>(trtC) <span class="co"># removes `base` column</span></code></pre></div>
 <pre><code>##     trt1 trt2 trt3
 ## mu0    0    0    0
 ## mu1    1    0    0
