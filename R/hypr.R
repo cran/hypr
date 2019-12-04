@@ -255,13 +255,19 @@ eqs2cmat <- function(eqs, as_fractions = TRUE) hmat2cmat(eqs2hmat(eqs), as_fract
 #' @describeIn conversions Convert hypothesis matrix to contrast matrix
 #' @export
 hmat2cmat <- function(hmat, as_fractions = TRUE) {
-  ginv2(hmat, as_fractions = as_fractions)
+  if(nrow(hmat) > 0 && ncol(hmat) > 0)
+    ginv2(hmat, as_fractions = as_fractions)
+  else
+    matrix(0, ncol = 0, nrow = 0)
 }
 
 #' @describeIn conversions Convert contrast matrix to hypothesis matrix
 #' @export
 cmat2hmat <- function(cmat, as_fractions = TRUE) {
-  ginv2(cmat, as_fractions = as_fractions)
+  if(nrow(cmat) > 0 && ncol(cmat) > 0)
+    ginv2(cmat, as_fractions = as_fractions)
+  else
+    matrix(0, ncol = 0, nrow = 0)
 }
 
 #' @describeIn conversions Convert hypothesis matrix to null hypothesis equations
@@ -358,11 +364,62 @@ hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
   if(!all(vapply(hyps, is.formula, logical(1)))) {
     stop("Arguments to hypr() must be formulas or a list() of those.")
   }
+  if(!is.null(names(hyps)) && any(names(hyps) == "")) {
+    stop("If there is at least one named hypothesis, all must be named.")
+  }
   parsed_hypotheses <- lapply(hyps, parse_hypothesis, valid_terms = levels)
   hmat <- expr2hmat(parsed_hypotheses, levels = levels, order_levels = order_levels, as_fractions = FALSE)
   cmat <- hmat2cmat(hmat, as_fractions = FALSE)
   new("hypr", eqs = parsed_hypotheses, hmat = hmat, cmat = cmat)
 }
+
+`+.hypr` <- function(e1, e2) {
+  check_argument(e1, "hypr")
+  check_argument(e2, "hypr")
+  hmat1 <- hmat(e1)
+  hmat2 <- hmat(e2)
+  new_cols <- union(colnames(hmat1), colnames(hmat2))
+  new_rows <- NULL
+  if(!is.null(rownames(hmat1)) && !is.null(rownames(hmat2))) {
+    dups <- intersect(rownames(hmat1), rownames(hmat2))
+    if(length(dups) == 0) {
+      new_rows <- c(rownames(hmat1), rownames(hmat2))
+    } else {
+      warning(sprintf("Contrast names are dropped because of duplicates: %s", paste(dups, collapse=", ")))
+    }
+  } else if(is.null(rownames(hmat1)) != is.null(rownames(hmat2))) {
+    warning("Contrast names are dropped because not all hypr objects contain named hypotheses.")
+  }
+  hmat0 <- matrix(0, nrow = nrow(hmat1) + nrow(hmat2), ncol = length(new_cols), dimnames = list(new_rows, new_cols))
+  hmat0[seq_len(nrow(hmat1)),colnames(hmat1)] <- hmat1
+  hmat0[seq_len(nrow(hmat2))+nrow(hmat1),colnames(hmat2)] <- hmat2
+  h0 <- hypr()
+  hmat(h0) <- hmat0
+  h0
+}
+
+#' Concatenate hypr objects
+#'
+#' You can concatenate one or more \code{hypr} objects, i.e. combine their hypothesis to a single \code{hypr} object, by adding them with the \code{+} operator.
+#'
+#' The resulting \code{hypr} object will contain all hypotheses of the constituting \code{hypr} objects but the resulting hypothesis and contrast matrices may differ. The result should be identical to creating a new \code{hypr} object with a list of hypotheses comprising all of the constituting hypr object’s hypotheses.
+#'
+#' @param e1,e2 \code{hypr} objects to concatenate
+#' @return The combined \code{hypr} object
+#'
+#' @examples
+#'
+#' (h1 <- hypr(a~i, b~i)) # a hypr object of two treatments
+#'
+#' (h2 <- hypr(i~0)) # an intercept-only hypr object
+#'
+#' hc <- h1 + h2
+#'
+#' hc
+#'
+#' @export
+#'
+setMethod("+", c("hypr","hypr"), `+.hypr`)
 
 #' Retrieve and set hypothesis matrix
 #'

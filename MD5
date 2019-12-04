@@ -1,8 +1,8 @@
-965036930de2b87561876873b8740c00 *DESCRIPTION
-9cb835eaa8beaa8984e8c3f32b2c7860 *NAMESPACE
+7848452066cd8d0bdca76d3054ce4a94 *DESCRIPTION
+ae86339462adf1391d252b0063438f87 *NAMESPACE
 592dc1475b556a3cd533c4040a73448f *R/equations.R
-a4f713298026203704dae4fac85bf9ba *R/hypr.R
-1b12254a5e5ffc4656a678f1a115ea46 *README.md
+34df3a14f343f1d0197b9eccdcc50ac7 *R/hypr.R
+6aad003b0c6f319468773e2ac4f5871e *README.md
 20e32dc06b803042b9a00893e25a1c3e *build/vignette.rds
 7a67551100a153571fc3748be0cc39ea *inst/CITATION
 4c0a1abdb9f4ac0a3fb5544982788c24 *inst/doc/hypr-contrasts.R
@@ -21,6 +21,7 @@ fb62f15f5f2a9459e6fbf386532bb9c9 *inst/doc/hypr-intro.Rmd
 5509f6b67ca49d468fbe3382119ae221 *man/hmat.Rd
 727c37d460dc7a88210620611996a623 *man/hypr-class.Rd
 18203cc5b93b52ac300ed9153514feb9 *man/hypr.Rd
+335d56ae1d593f55aebad77df3b73acd *man/plus-hypr-hypr-method.Rd
 46a9e6c47d0bb58d82a85e92644ab63f *vignettes/hypr-contrasts.Rmd
 fb62f15f5f2a9459e6fbf386532bb9c9 *vignettes/hypr-intro.Rmd
 3ab73f448e580e70a520939309bbfb19 *vignettes/hypr-regression.Rmd
