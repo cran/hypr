@@ -135,7 +135,13 @@ setMethod("show", "hypr", show.hypr)
 parse_hypothesis <- function(expr, valid_terms = NULL) {
   check_argument(expr, c("expression","formula","call"))
   check_argument(valid_terms, c("NULL","character"))
-  ret <- simplify_expr_sum(simplify_expr(call("-",expr[[2]],expr[[3]])))
+  if(length(expr) == 2) {
+    ret <- simplify_expr_sum(simplify_expr(call("-", expr[[2]], 0)))
+  } else if(length(expr) == 3) {
+    ret <- simplify_expr_sum(simplify_expr(call("-", expr[[2]], expr[[3]])))
+  } else {
+    stop("Expression has an unusual length!")
+  }
   for(el in ret) {
     if(length(el@var) == 0) {
       stop("Equation should not have terms without variables!")
@@ -333,18 +339,25 @@ is.formula <- function(x) is(x, "formula") || is.call(x) && x[[1]] == "~"
 #' # Treatment contrast:
 #' h <- hypr(mu1~0, mu2~mu1, mu3~mu1, mu4~mu1)
 #'
+#' # Identical version:
+#' h <- hypr(~mu1, ~mu2-mu1, ~mu3-mu1, ~mu4-mu1)
+#'
 #' contr.hypothesis(h)
 #'
 #'
 #' # Generate a dataset
 #' set.seed(123)
-#' M <- c(X1 = 10, X2 = 20, X3 = 10, X4 = 40) # condition means
+#' M <- c(mu1 = 10, mu2 = 20, mu3 = 10, mu4 = 40) # condition means
 #' N <- 5 # number of observations per condition
 #' SD <- 10 # residual SD
 #' simdat <- do.call(rbind, lapply(names(M), function(x) {
 #'   data.frame(X = x, DV = as.numeric(MASS::mvrnorm(N, unname(M[x]), SD^2, empirical = TRUE)))
 #' }))
+#' simdat$X <- factor(simdat$X, levels=levels(h))
 #' simdat
+#'
+#' # Check agreement of hypothesis levels and factor levels
+#' stopifnot(levels(h) == levels(simdat$X))
 #'
 #' # Linear regression
 #' contrasts(simdat$X) <- contr.hypothesis(h)
@@ -360,6 +373,10 @@ hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
     return(new("hypr"))
   } else if(length(hyps) == 1 && is.list(hyps[[1]])) {
     hyps <- hyps[[1]]
+  } else if(length(hyps) == 1 && is.matrix(hyps[[1]])) {
+    h <- hypr()
+    cmat(h) <- hyps[[1]]
+    return(h)
   }
   if(!all(vapply(hyps, is.formula, logical(1)))) {
     stop("Arguments to hypr() must be formulas or a list() of those.")
@@ -368,6 +385,10 @@ hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
     stop("If there is at least one named hypothesis, all must be named.")
   }
   parsed_hypotheses <- lapply(hyps, parse_hypothesis, valid_terms = levels)
+  which_empty <- which(vapply(parsed_hypotheses, function(x) length(x) == 0, FALSE))
+  if(length(which_empty) > 0) {
+    stop(sprintf("List contains at least one empty hypothesis: %s", paste(vapply(hyps, function(x) as.character(as.expression(x)), ""), collapse=", ")))
+  }
   hmat <- expr2hmat(parsed_hypotheses, levels = levels, order_levels = order_levels, as_fractions = FALSE)
   cmat <- hmat2cmat(hmat, as_fractions = FALSE)
   new("hypr", eqs = parsed_hypotheses, hmat = hmat, cmat = cmat)
@@ -376,36 +397,75 @@ hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
 `+.hypr` <- function(e1, e2) {
   check_argument(e1, "hypr")
   check_argument(e2, "hypr")
-  hmat1 <- hmat(e1)
-  hmat2 <- hmat(e2)
-  new_cols <- union(colnames(hmat1), colnames(hmat2))
-  new_rows <- NULL
-  if(!is.null(rownames(hmat1)) && !is.null(rownames(hmat2))) {
-    dups <- intersect(rownames(hmat1), rownames(hmat2))
-    if(length(dups) == 0) {
-      new_rows <- c(rownames(hmat1), rownames(hmat2))
-    } else {
-      warning(sprintf("Contrast names are dropped because of duplicates: %s", paste(dups, collapse=", ")))
-    }
-  } else if(is.null(rownames(hmat1)) != is.null(rownames(hmat2))) {
-    warning("Contrast names are dropped because not all hypr objects contain named hypotheses.")
+  cmat1 <- cmat(e1)
+  cmat2 <- cmat(e2)
+  if(is.null(rownames(cmat1))) {
+    rownames(cmat1) <- sprintf("mu%d", seq_len(nrow(cmat1)))
   }
-  hmat0 <- matrix(0, nrow = nrow(hmat1) + nrow(hmat2), ncol = length(new_cols), dimnames = list(new_rows, new_cols))
-  hmat0[seq_len(nrow(hmat1)),colnames(hmat1)] <- hmat1
-  hmat0[seq_len(nrow(hmat2))+nrow(hmat1),colnames(hmat2)] <- hmat2
-  h0 <- hypr()
-  hmat(h0) <- hmat0
-  h0
+  if(is.null(rownames(cmat2))) {
+    rownames(cmat2) <- sprintf("mu%d", seq_len(nrow(cmat2)))
+  }
+  mat <- do.call(rbind, lapply(seq_len(nrow(cmat1)), function(i) {
+    cbind(cmat1[rep(i, each=nrow(cmat2)), , drop = FALSE], cmat2)
+  }))
+  colnames(mat) <- if(is.null(colnames(cmat1)) || is.null(colnames(cmat2))) NULL else c(colnames(cmat1), colnames(cmat2))
+  rownames(mat) <- sprintf("%s.%s", rep(rownames(cmat1), each=nrow(cmat2)), rep(rownames(cmat2), nrow(cmat1)))
+  ret <- hypr()
+  cmat(ret) <- mat
+  ret
 }
 
-#' Concatenate hypr objects
+`:.hypr` <- function(e1, e2) {
+  check_argument(e1, "hypr")
+  check_argument(e2, "hypr")
+  cmat1 <- cmat(e1)
+  cmat2 <- cmat(e2)
+  if(is.null(rownames(cmat1))) {
+    rownames(cmat1) <- sprintf("mu%d", seq_len(nrow(cmat1)))
+  }
+  if(is.null(rownames(cmat2))) {
+    rownames(cmat2) <- sprintf("mu%d", seq_len(nrow(cmat2)))
+  }
+  mat <- do.call(cbind, lapply(seq_len(ncol(cmat1)), function(i) {
+    do.call(rbind, lapply(seq_len(nrow(cmat1)), function(j) {
+      cmat1[j,i] * cmat2
+    }))
+  }))
+  colnames(mat) <- if(is.null(colnames(cmat1)) || is.null(colnames(cmat2))) NULL else sprintf("%s.%s", rep(colnames(cmat1), each=ncol(cmat2)), rep(colnames(cmat2), ncol(cmat1)))
+  rownames(mat) <- sprintf("%s.%s", rep(rownames(cmat1), each=nrow(cmat2)), rep(rownames(cmat2), nrow(cmat1)))
+  ret <- hypr()
+  cmat(ret) <- mat
+  ret
+}
+
+`*.hypr` <- function(e1, e2) {
+  ret <- hypr()
+  cmat(ret) <- cbind(cmat(`+.hypr`(e1,e2)), cmat(`:.hypr`(e1,e2)))
+  ret
+}
+
+`/.hypr` <- function(e1, e2) {
+  ret <- hypr()
+  e3 <- hypr()
+  cmat(e3) <- diag(length(levels(e1)))
+  names(e3) <- levels(e1)
+  levels(e3) <- levels(e1)
+  cmat1 <- cmat(e1)
+  cmat2 <- cmat(`:.hypr`(e3,e2))
+  cmat(ret) <- cbind(cmat1[rep(seq_len(nrow(cmat1)), each=length(levels(e2))),], cmat2)
+  levels(ret) <- rownames(cmat2)
+  ret
+}
+
+#' Combining hypr objects by addition or interaction
 #'
-#' You can concatenate one or more \code{hypr} objects, i.e. combine their hypothesis to a single \code{hypr} object, by adding them with the \code{+} operator.
+#' You can combine one or more \code{hypr} objects, i.e. combine their hypothesis to a single \code{hypr} object, by adding them with the \code{+} or \code{\*} operators.
 #'
-#' The resulting \code{hypr} object will contain all hypotheses of the constituting \code{hypr} objects but the resulting hypothesis and contrast matrices may differ. The result should be identical to creating a new \code{hypr} object with a list of hypotheses comprising all of the constituting hypr object’s hypotheses.
 #'
 #' @param e1,e2 \code{hypr} objects to concatenate
 #' @return The combined \code{hypr} object
+#'
+#' @rdname combination
 #'
 #' @examples
 #'
@@ -417,9 +477,27 @@ hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
 #'
 #' hc
 #'
+#' interaction <- h1 & h2
+#'
+#' interaction_and_main <- h1 * h2
+#'
 #' @export
 #'
 setMethod("+", c("hypr","hypr"), `+.hypr`)
+
+#' @describeIn combination Interaction of \code{e1} and \code{e2}
+#' @export
+setMethod("*", c("hypr","hypr"), `*.hypr`)
+
+#' @describeIn combination Interaction and main contrasts of \code{e1} and \code{e2}
+#' @export
+setMethod("&", c("hypr","hypr"), `:.hypr`)
+
+#' @describeIn combination Nesting levels of \code{e2} within \code{e1}
+#' @export
+setMethod("/", c("hypr","hypr"), `/.hypr`)
+
+setMethod("seq", c("hypr"), `:.hypr`)
 
 #' Retrieve and set hypothesis matrix
 #'
