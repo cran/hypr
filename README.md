@@ -1,6 +1,9 @@
 
 # hypr
 
+[![status](https://joss.theoj.org/papers/866129b28b619712fa28bbc10bef37c6/status.svg)](https://joss.theoj.org/papers/866129b28b619712fa28bbc10bef37c6) [![DOI](https://zenodo.org/badge/208564895.svg)](https://zenodo.org/badge/latestdoi/208564895)
+
+
 hypr is an R package for easy translation between experimental (null) hypotheses and contrast matrices as used for linear regression. For an extensive overview of the package functions, see the `hypr-intro` vignette, e.g. by running `vignette("hypr-intro")` after installing the package.
 
 ## Installation
@@ -147,3 +150,6 @@ The derived hypotheses can be rewritten as:
 For more information, see `vignette("hypr-contrasts")`.
 
 
+## Community guidelines
+
+If you want to report a bug, are having technical difficulties or want to recommend features, it’s best to open a [Github Issue](https://github.com/mmrabe/hypr/issues/new/choose). If you want to suggest a specific implementation of a feature or bug fix, you’re welcome to fork the repository and submit a pull request! Alternatively, if you are having problems or questions, you can also send an e-mail (<maximilian.rabe@uni-potsdam.de>).
