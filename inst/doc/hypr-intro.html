@@ -215,6 +215,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 ## mu2  0    0    1    0  
 ## mu3  0    0    0    1</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cmat</span>(trtC) <span class="co"># the contrast matrix</span></code></pre></div>
+<pre><code>## Warning in cmat(trtC): The contrast matrix you are retrieving appears to have
+## an intercept column. If this is intentional, you can ignore this warning or
+## suppress it by explictly calling cmat(..., remove_intercept=FALSE).</code></pre>
 <pre><code>##     base trt1 trt2 trt3
 ## mu0 1    0    0    0   
 ## mu1 1    1    0    0   
@@ -249,6 +252,9 @@ otherC</code></pre></div>
 <p>You can always use <code>cmat</code> to derive the complete contrast matrix from a <code>hypr</code> object. Note, however, that depending on the contrast scheme used, it might be necessary to remove the intercept contrast from the matrix before assigning it to a factor for regression analysis.</p>
 <p>For example, the <code>trtC</code> object from above contains such an intercept:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cmat</span>(trtC)</code></pre></div>
+<pre><code>## Warning in cmat(trtC): The contrast matrix you are retrieving appears to have
+## an intercept column. If this is intentional, you can ignore this warning or
+## suppress it by explictly calling cmat(..., remove_intercept=FALSE).</code></pre>
 <pre><code>##     base trt1 trt2 trt3
 ## mu0 1    0    0    0   
 ## mu1 1    1    0    0   

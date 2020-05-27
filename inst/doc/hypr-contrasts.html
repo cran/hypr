@@ -124,8 +124,12 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 ## 4 0 0 1</code></pre>
 <p>To understand what this contrast is testing, we can create an empty <code>hypr</code> object and set its contrast matrix to the one above:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">h &lt;-<span class="st"> </span><span class="kw">hypr</span>()
-<span class="kw">cmat</span>(h) &lt;-<span class="st"> </span><span class="kw">contr.treatment</span>(<span class="dv">4</span>)
-h</code></pre></div>
+<span class="kw">cmat</span>(h) &lt;-<span class="st"> </span><span class="kw">contr.treatment</span>(<span class="dv">4</span>)</code></pre></div>
+<pre><code>## Warning in `cmat&lt;-`(`*tmp*`, value = structure(c(0, 1, 0, 0, 0, 0, 1, 0, : The
+## contrast matrix you are assigning to this hypr object does not appear to have
+## an intercept column. If this is intentional, you can ignore this warning or
+## suppress it by explictly calling cmat(..., add_intercept=FALSE) &lt;- x.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">h</code></pre></div>
 <pre><code>## hypr object containing 3 null hypotheses:
 ## H0.2: 0 = X2
 ## H0.3: 0 = X3
