@@ -738,10 +738,10 @@ cmat <- function(x, add_intercept = FALSE, remove_intercept = FALSE, as_fraction
   }
   value <- prepare_cmat(x@cmat, add_intercept, remove_intercept)
   if(isTRUE(as_fractions)) {
-    MASS::as.fractions(value)
-  } else {
-    value
+    value <- MASS::as.fractions(value)
   }
+  class(value) <- union(class(value), "hypr_cmat")
+  value
 }
 
 #' @describeIn cmat Set contrast matrix
@@ -786,6 +786,32 @@ contr.hypothesis <- function(..., add_intercept = FALSE, remove_intercept = NULL
   )
 }
 
+`contrasts<-.hypr` <- function(x, how.many, value) {
+  if(inherits(value, "hypr")) {
+    cm <- contr.hypothesis(value)
+  } else if(inherits(value, "hypr_cmat")) {
+    cm <- value
+  }
+  if(!setequal(levels(x), rownames(cm))) {
+    warning(sprintf("The levels of the hypr object (%s) do not match the levels of the factor (%s). Contrasts may have been incorrectly assigned. Please check results with contrasts(factor) or ensure that level names match!",paste(rownames(cm), collapse = ", "),paste(levels(x), collapse=", ")))
+  }
+  cm <- cm[match(levels(x), rownames(cm)), , drop = FALSE]
+  if(missing(how.many))
+    contrasts(x) <- cm
+  else
+    contrasts(x, how.many) <- cm
+  x
+}
+
+#' @describeIn cmat Update factor contrasts
+#' @param how.many see \code{\link[stats:contrasts]{stats::contrasts()}}
+#' @export
+setMethod("contrasts<-", c(x="ANY",how.many="ANY",value="hypr"), `contrasts<-.hypr`)
+
+#' @describeIn cmat Update factor contrasts
+#' @export
+setMethod("contrasts<-", c(x="ANY",how.many="ANY",value="hypr_cmat"), `contrasts<-.hypr`)
+
 #' @describeIn cmat Update contrast matrix with sensible intercept default
 #' @export
 `contr.hypothesis<-` <- function(x, add_intercept = NULL, remove_intercept = FALSE, as_fractions = FALSE, value) {
@@ -819,7 +845,7 @@ contr.hypothesis <- function(..., add_intercept = FALSE, remove_intercept = NULL
 #' cmat(h)
 #'
 #' # cmat is effectively the generalized inverse of hmat
-#' stopifnot(all.equal(ginv2(hmat(h)), cmat(h)))
+#' stopifnot(all.equal(ginv2(hmat(h)), cmat(h), check.attributes = FALSE))
 #'
 #' @export
 ginv2 <- function(x, as_fractions = TRUE) {
