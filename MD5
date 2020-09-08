@@ -1,8 +1,8 @@
-6301cbf70486cd7f4ed3fe8145db9cc3 *DESCRIPTION
+faab850ad8614fbdaeb94f12776fcd0b *DESCRIPTION
 693acfd65ed4f215d8e8e635434c1d63 *NAMESPACE
 592dc1475b556a3cd533c4040a73448f *R/equations.R
-d76caf7151c3bccfa538d071497b70fd *R/hypr.R
-d05eff1759ef84092d0ebd135ac0b59e *README.md
+f24f5b445afeb03edc2f87984923823c *R/hypr.R
+1b6da586557134162cfe4d31f53c122e *README.md
 20e32dc06b803042b9a00893e25a1c3e *build/vignette.rds
 011f1ae429539a2db2c789475abacbbc *inst/CITATION
 8209c26498451743d311bfd420603c9c *inst/doc/hypr-contrasts.R
@@ -10,7 +10,7 @@ d05eff1759ef84092d0ebd135ac0b59e *README.md
 737d5b6f23dd6ec95a39b59e6ceed8f4 *inst/doc/hypr-contrasts.html
 97b1d370c8572d872dcbc451e28d18fc *inst/doc/hypr-intro.R
 fb62f15f5f2a9459e6fbf386532bb9c9 *inst/doc/hypr-intro.Rmd
-e169fe8d2509d7872274a8e8dc31e6cd *inst/doc/hypr-intro.html
+7b4ac8f1c3a3fea2e869c31dfcbfdb89 *inst/doc/hypr-intro.html
 90e1c2fdbf0142271b31d9fb9c9c83b8 *inst/doc/hypr-regression.R
 5e08f07b2988e14fd109ac37c790d1bf *inst/doc/hypr-regression.Rmd
 4c814e2c4e7f135e75ccab3b4ef6f446 *inst/doc/hypr-regression.html
@@ -18,7 +18,7 @@ ad84cb2742ada9787602e87ade73d7b3 *man/cmat.Rd
 edee3688e0a010f1ee46349824f866a8 *man/combination.Rd
 1c2b3a5ea6685dbd0fdf4e7a2ca246da *man/conversions.Rd
 8ec4bd4224e5d57a237457185ad5be95 *man/formula-set.Rd
-2e5df3012ac688f162e8bfc80e7741a6 *man/ginv2.Rd
+7100ebfc5f55b6ca7f60c8ad5017c686 *man/ginv2.Rd
 5509f6b67ca49d468fbe3382119ae221 *man/hmat.Rd
 727c37d460dc7a88210620611996a623 *man/hypr-class.Rd
 e7f438836e97208ebd5e24702cc2f8a4 *man/hypr.Rd

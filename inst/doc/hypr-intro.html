@@ -285,7 +285,7 @@ otherC</code></pre></div>
 ## mu2    0    1    0
 ## mu3    0    0    1
 ## attr(,&quot;class&quot;)
-## [1] &quot;matrix&quot;    &quot;hypr_cmat&quot;</code></pre>
+## [1] &quot;hypr_cmat&quot; &quot;matrix&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">contr.hypothesis</span>(helC) <span class="co"># removes nothing</span></code></pre></div>
 <pre><code>##    [,1]       [,2]  [,3]
 ## m1 -0.5 -0.3333333 -0.25
@@ -293,7 +293,7 @@ otherC</code></pre></div>
 ## m3  0.0  0.6666667 -0.25
 ## m4  0.0  0.0000000  0.75
 ## attr(,&quot;class&quot;)
-## [1] &quot;matrix&quot;    &quot;hypr_cmat&quot;</code></pre>
+## [1] &quot;hypr_cmat&quot; &quot;matrix&quot;</code></pre>
 <p><code>contr.hypothesis</code> can also come in handy if you don't really need the <code>hypr</code> object but would only like to specify the hypotheses and return the contrast matrix. In that case, you can just use <code>contr.hypothesis</code> like the <code>hypr</code> function:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">contr.hypothesis</span>(m1<span class="op">~</span><span class="dv">0</span>, m2<span class="op">~</span>m1, m3<span class="op">~</span>m1)</code></pre></div>
 <pre><code>##    [,1] [,2]
@@ -301,7 +301,7 @@ otherC</code></pre></div>
 ## m2    1    0
 ## m3    0    1
 ## attr(,&quot;class&quot;)
-## [1] &quot;matrix&quot;    &quot;hypr_cmat&quot;</code></pre>
+## [1] &quot;hypr_cmat&quot; &quot;matrix&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">contr.hypothesis</span>(m2<span class="op">~</span>m1, m3<span class="op">~</span>(m1<span class="op">+</span>m2)<span class="op">/</span><span class="dv">2</span>, m4<span class="op">~</span>(m1<span class="op">+</span>m2<span class="op">+</span>m3)<span class="op">/</span><span class="dv">3</span>)</code></pre></div>
 <pre><code>##    [,1]       [,2]  [,3]
 ## m1 -0.5 -0.3333333 -0.25
@@ -309,7 +309,7 @@ otherC</code></pre></div>
 ## m3  0.0  0.6666667 -0.25
 ## m4  0.0  0.0000000  0.75
 ## attr(,&quot;class&quot;)
-## [1] &quot;matrix&quot;    &quot;hypr_cmat&quot;</code></pre>
+## [1] &quot;hypr_cmat&quot; &quot;matrix&quot;</code></pre>
 </div>
 
 
