@@ -1,10 +1,10 @@
-faab850ad8614fbdaeb94f12776fcd0b *DESCRIPTION
+c8fc855bb3c543f6fc446a5bce9f303e *DESCRIPTION
 693acfd65ed4f215d8e8e635434c1d63 *NAMESPACE
 592dc1475b556a3cd533c4040a73448f *R/equations.R
-f24f5b445afeb03edc2f87984923823c *R/hypr.R
+0f963791b01e923e23389c4750093552 *R/hypr.R
 1b6da586557134162cfe4d31f53c122e *README.md
 20e32dc06b803042b9a00893e25a1c3e *build/vignette.rds
-011f1ae429539a2db2c789475abacbbc *inst/CITATION
+3c5650a64fa6e955470c81221ecd93b9 *inst/CITATION
 8209c26498451743d311bfd420603c9c *inst/doc/hypr-contrasts.R
 46a9e6c47d0bb58d82a85e92644ab63f *inst/doc/hypr-contrasts.Rmd
 737d5b6f23dd6ec95a39b59e6ceed8f4 *inst/doc/hypr-contrasts.html
