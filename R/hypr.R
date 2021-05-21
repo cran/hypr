@@ -1,5 +1,7 @@
 #' @include equations.R
 #' @importFrom methods as is new show
+#' @importFrom stats cov
+#' @importFrom MASS as.fractions fractions mvrnorm ginv
 NULL
 
 
@@ -104,26 +106,59 @@ check_argument <- function(val, ...) {
 setClass("hypr", slots=c(eqs = "list", hmat = "matrix", cmat = "matrix"))
 
 show.hypr <- function(object) {
+  cat_formatted <- function(txt, bold = FALSE, color = NULL) {
+    if(bold) cat("\033[1m")
+    if(!is.null(color)) cat(sprintf("\033[%dm", c("red" = 31, "green" = 32, "yellow"= 33, "blue" = 34, "gray" = 37, "dark_gray" = 38)[color]))
+    cat(txt)
+    if(!is.null(color)) cat("\033[39m")
+    if(bold) cat("\033[0m")
+  }
   check_argument(object, "hypr")
+  hypr_call <- as.call(c(list(as.name("hypr")), formula(object), list(levels = levels(object))))
   if(length(object@eqs) == 0) {
     cat("This hypr object does not contain hypotheses.")
   } else {
     if(length(object@eqs) == 1) {
-      cat("hypr object containing one (1) null hypothesis:")
+      cat_formatted("hypr object containing one (1) null hypothesis:", bold = TRUE)
     } else {
-      cat(sprintf("hypr object containing %d null hypotheses:", length(object@eqs)))
+      cat_formatted(sprintf("hypr object containing %d null hypotheses:", length(object@eqs)), bold = TRUE)
     }
     cat("\n")
     eq.names <- sprintf("H0.%s", if(is.null(names(object@eqs))) seq_along(object@eqs) else names(object@eqs))
+    dropped.hyps <- attr(object@hmat, "dropped.hyps")
+    eqs.str <- vapply(object@eqs, as.character.expr_sum, "")
+    longest.eqs.str <- max(nchar(eqs.str))
+    longest.eqs.name <- max(nchar(eq.names))
     for(i in seq_along(object@eqs)) {
-      cat(sprintf("%*s: 0 = ", max(nchar(eq.names)), eq.names[i]))
-      show.expr_sum(object@eqs[[i]])
+      if(i %in% dropped.hyps) cat("( ")
+      else if(!is.null(dropped.hyps)) cat("  ")
+      cat(sprintf("%*s: 0 = ", longest.eqs.name, eq.names[i]))
+      cat(eqs.str[i])
+      if(i %in% dropped.hyps) {
+        cat(strrep(" ", longest.eqs.str-nchar(eqs.str[i])))
+        cat(" )")
+      }
       cat("\n")
     }
-    cat("\nHypothesis matrix (transposed):\n")
-    show(thmat(object))
-    cat("\nContrast matrix:\n")
-    show(cmat(object, remove_intercept = FALSE, add_intercept = FALSE))
+    if(!is.null(attr(object@hmat, "dropped.hyps"))) {
+      cat_formatted("Note: Hypotheses in parentheses are not linearly independent and thus dropped from the hypothesis and contrast matrices!\n", color = "red")
+    }
+    cat("\n")
+    cat_formatted("Call:", bold = TRUE)
+    cat("\n")
+    show(hypr_call)
+    cat("\n")
+    cat_formatted("Hypothesis matrix (transposed):", bold = TRUE)
+    cat("\n")
+    x <- t(object@hmat)
+    attributes(x) <- list(dim = dim(x), dimnames = dimnames(x))
+    show(fractions(x))
+    cat("\n")
+    cat_formatted("Contrast matrix:", bold = TRUE)
+    cat("\n")
+    x <- object@cmat
+    attributes(x) <- list(dim = dim(x), dimnames = dimnames(x))
+    show(fractions(x))
   }
 }
 
@@ -248,10 +283,27 @@ expr2hmat <- function(expr, levels = NULL, order_levels = missing(levels), as_fr
   }, double(length(levels))))
   rownames(ret) <- levels
   colnames(ret) <- names(expr)
-  if(as_fractions)
-    MASS::as.fractions(t(ret))
-  else
-    t(ret)
+  qrM <- qr(ret)
+  ret <- t(ret)
+  if(qrM$rank < nrow(ret)) {
+    keep.hyps <- qrM$pivot[seq_len(qrM$rank)]
+    drop.hyps <- setdiff(seq_len(nrow(ret)), keep.hyps)
+    ret <- ret[keep.hyps,,drop=FALSE]
+    attr(ret, "dropped.hyps") <- drop.hyps
+    if(is.null(names(expr))) {
+      if(length(drop.hyps) == 1) {
+        warning(sprintf("Your hypotheses are not linearly independent. The resulting hypothesis matrix was rank-deficient. Dropped hypothesis #%d.", drop.hyps))
+      } else {
+        warning(sprintf("Your hypotheses are not linearly independent. The resulting hypothesis matrix was rank-deficient. Dropped hypotheses %s.", paste0("#", drop.hyps, collapse=", ")))
+      }
+    } else {
+      dropped.hyps.names <- names(expr)[drop.hyps]
+      attr(ret, "dropped.hyps.names") <- dropped.hyps.names
+      warning(sprintf("Your hypotheses are not linearly independent. The resulting hypothesis matrix was rank-deficient. Dropped %s.", paste(dropped.hyps.names, collapse=", ")))
+    }
+  }
+  if(as_fractions) ret <- as.fractions(ret)
+  ret
 }
 
 #' @describeIn conversions Convert null hypothesis equations to contrast matrix
@@ -261,10 +313,10 @@ eqs2cmat <- function(eqs, as_fractions = TRUE) hmat2cmat(eqs2hmat(eqs), as_fract
 #' @describeIn conversions Convert hypothesis matrix to contrast matrix
 #' @export
 hmat2cmat <- function(hmat, as_fractions = TRUE) {
-  if(nrow(hmat) > 0 && ncol(hmat) > 0)
-    ginv2(hmat, as_fractions = as_fractions)
+  if(nrow(hmat) == 0)
+    matrix(0, ncol(hmat), 0, dimnames = list(colnames(hmat),NULL))
   else
-    matrix(0, ncol = 0, nrow = 0)
+    ginv2(hmat, as_fractions = as_fractions)
 }
 
 #' @describeIn conversions Convert contrast matrix to hypothesis matrix
@@ -287,7 +339,7 @@ hmat2expr <- function(hmat, as_fractions = TRUE) {
     simplify_expr_sum(
       as(lapply(seq_len(ncol(hmat)), function(i) {
         if(as_fractions) {
-          frac <- strsplit(attr(MASS::as.fractions(hmat[j,i]), "fracs"), "/", TRUE)[[1]]
+          frac <- strsplit(attr(as.fractions(hmat[j,i]), "fracs"), "/", TRUE)[[1]]
           num <- new("expr_frac", num = as.integer(frac[1]), den = if(length(frac)>1) as.integer(frac[2]) else 1L)
         } else {
           num <- new("expr_real", num = hmat[j,i])
@@ -317,6 +369,8 @@ is.formula <- function(x) is(x, "formula") || is.call(x) && x[[1]] == "~"
 #' @param ... A list of null hypothesis equations
 #' @param levels (Optional) A list of terms/levels to use. If supplied, matrix rows/columns will be in this order. An error will be thrown if an equation contains a level that is not in this vector.
 #' @param order_levels (Optional) Whether to order the rows/columns of the hypothesis/contrast matrices alphabetically. Default is \code{TRUE} if \code{levels} were not explicitly provided.
+#' @param add_intercept If \code{TRUE}, an intercept will be added
+#' @param remove_intercept If \code{TRUE}, an intercept will be dropped
 #'
 #' @return A \code{hypr} object
 #'
@@ -365,7 +419,7 @@ is.formula <- function(x) is(x, "formula") || is.call(x) && x[[1]] == "~"
 #' round(coef(summary(lm(DV ~ X, data=simdat))),3)
 #'
 #' @export
-hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
+hypr <- function(..., levels = NULL, add_intercept = FALSE, remove_intercept = FALSE, order_levels = missing(levels)) {
   hyps = list(...)
   check_argument(levels, c("NULL","character"))
   check_argument(order_levels, "logical", 1)
@@ -375,7 +429,7 @@ hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
     hyps <- hyps[[1]]
   } else if(length(hyps) == 1 && is.matrix(hyps[[1]])) {
     h <- hypr()
-    cmat(h) <- hyps[[1]]
+    cmat(h, add_intercept = FALSE) <- hyps[[1]]
     return(h)
   }
   if(!all(vapply(hyps, is.formula, logical(1)))) {
@@ -391,14 +445,28 @@ hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
   }
   hmat <- expr2hmat(parsed_hypotheses, levels = levels, order_levels = order_levels, as_fractions = FALSE)
   cmat <- hmat2cmat(hmat, as_fractions = FALSE)
+  if(isTRUE(remove_intercept)) {
+    cmat <- cmat[,-which_intercept(cmat),drop=FALSE]
+    hmat <- cmat2hmat(cmat, as_fractions = FALSE)
+    parsed_hypotheses <- hmat2expr(hmat, as_fractions = TRUE)
+  }
+  if(isTRUE(add_intercept)) {
+    if(is.null(colnames(cmat))) {
+      cmat <- cbind(1, cmat)
+    } else {
+      cmat <- cbind("Intercept" = 1, cmat)
+    }
+    hmat <- cmat2hmat(cmat, as_fractions = FALSE)
+    parsed_hypotheses <- hmat2expr(hmat, as_fractions = TRUE)
+  }
   new("hypr", eqs = parsed_hypotheses, hmat = hmat, cmat = cmat)
 }
 
 `+.hypr` <- function(e1, e2) {
   check_argument(e1, "hypr")
   check_argument(e2, "hypr")
-  cmat1 <- cmat(e1)
-  cmat2 <- cmat(e2)
+  cmat1 <- cmat(e1, remove_intercept = has_intercept(e1))
+  cmat2 <- cmat(e2, remove_intercept = has_intercept(e2))
   if(is.null(rownames(cmat1))) {
     rownames(cmat1) <- sprintf("mu%d", seq_len(nrow(cmat1)))
   }
@@ -409,17 +477,30 @@ hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
     cbind(cmat1[rep(i, each=nrow(cmat2)), , drop = FALSE], cmat2)
   }))
   colnames(mat) <- if(is.null(colnames(cmat1)) || is.null(colnames(cmat2))) NULL else c(colnames(cmat1), colnames(cmat2))
-  rownames(mat) <- sprintf("%s.%s", rep(rownames(cmat1), each=nrow(cmat2)), rep(rownames(cmat2), nrow(cmat1)))
+  rownames(mat) <- sprintf("%s:%s", rep(rownames(cmat1), each=nrow(cmat2)), rep(rownames(cmat2), nrow(cmat1)))
+  qrM <- qr(mat)
+  if(qrM$rank < ncol(mat)) {
+    drop.cols <- sort(qrM$pivot[-seq_len(qrM$rank)])
+    warning(sprintf("The resulting contrast matrix is rank-deficient. Dropping %d column(s).", length(drop.cols)))
+    mat <- mat[,qrM$pivot[seq_len(qrM$rank)],drop=FALSE]
+  }
   ret <- hypr()
-  cmat(ret) <- mat
+  add_intercept <- FALSE
+  if(has_intercept(e1) || has_intercept(e2)) {
+    qrM <- qr(cbind(1, mat))
+    if(qrM$rank == ncol(mat) + 1) {
+      add_intercept <- TRUE
+    }
+  }
+  cmat(ret, add_intercept = add_intercept) <- mat
   ret
 }
 
 `:.hypr` <- function(e1, e2) {
   check_argument(e1, "hypr")
   check_argument(e2, "hypr")
-  cmat1 <- cmat(e1)
-  cmat2 <- cmat(e2)
+  cmat1 <- cmat(e1, remove_intercept = has_intercept(e1))
+  cmat2 <- cmat(e2, remove_intercept = has_intercept(e2))
   if(is.null(rownames(cmat1))) {
     rownames(cmat1) <- sprintf("mu%d", seq_len(nrow(cmat1)))
   }
@@ -431,29 +512,29 @@ hypr <- function(..., levels = NULL, order_levels = missing(levels)) {
       cmat1[j,i] * cmat2
     }))
   }))
-  colnames(mat) <- if(is.null(colnames(cmat1)) || is.null(colnames(cmat2))) NULL else sprintf("%s.%s", rep(colnames(cmat1), each=ncol(cmat2)), rep(colnames(cmat2), ncol(cmat1)))
-  rownames(mat) <- sprintf("%s.%s", rep(rownames(cmat1), each=nrow(cmat2)), rep(rownames(cmat2), nrow(cmat1)))
+  colnames(mat) <- if(is.null(colnames(cmat1)) || is.null(colnames(cmat2))) NULL else sprintf("%s:%s", rep(colnames(cmat1), each=ncol(cmat2)), rep(colnames(cmat2), ncol(cmat1)))
+  rownames(mat) <- sprintf("%s:%s", rep(rownames(cmat1), each=nrow(cmat2)), rep(rownames(cmat2), nrow(cmat1)))
   ret <- hypr()
-  cmat(ret) <- mat
+  cmat(ret, add_intercept = has_intercept(e1) || has_intercept(e2)) <- mat
   ret
 }
 
 `*.hypr` <- function(e1, e2) {
-  ret <- hypr()
-  cmat(ret) <- cbind(cmat(`+.hypr`(e1,e2)), cmat(`:.hypr`(e1,e2)))
-  ret
+  e1 + e2 + (e1 & e2)
 }
 
 `/.hypr` <- function(e1, e2) {
-  ret <- hypr()
   e3 <- hypr()
-  cmat(e3) <- diag(length(levels(e1)))
-  names(e3) <- levels(e1)
-  levels(e3) <- levels(e1)
-  cmat1 <- cmat(e1)
-  cmat2 <- cmat(`:.hypr`(e3,e2))
-  cmat(ret) <- cbind(cmat1[rep(seq_len(nrow(cmat1)), each=length(levels(e2))),], cmat2)
-  levels(ret) <- rownames(cmat2)
+  cmat(e3, add_intercept = FALSE) <- diag(length(levels(e1)))
+  names(e3) <- levels(e3) <- levels(e1)
+  #cmat1 <- cmat(e1, remove_intercept = TRUE)
+  #cmat2 <- cmat(`:.hypr`(e3,e2), remove_intercept = FALSE)
+  e4 <- e3 & e2
+  mat <- cmat(e3, remove_intercept = FALSE)
+  mat <- mat[rep(seq_len(nrow(mat)), each=length(levels(e2))),,drop=FALSE]
+  rownames(mat) <- paste0(rep(levels(e3), each=length(levels(e2))),":",levels(e2))
+  ret <- hypr()
+  cmat(ret, add_intercept = FALSE) <- cbind(mat, cmat(e4, remove_intercept = has_intercept(e4)))
   ret
 }
 
@@ -533,7 +614,7 @@ setMethod("seq", c("hypr"), `:.hypr`)
 #' stopifnot(all.equal(cmat(h), cmat(h2)))
 #'
 #' @export
-hmat <- function(x, as_fractions = TRUE) if(as_fractions) MASS::as.fractions(x@hmat) else x@hmat
+hmat <- function(x, as_fractions = TRUE) if(as_fractions) as.fractions(x@hmat) else x@hmat
 
 #' @describeIn hmat Retrieve transposed hypothesis matrix
 #' @export
@@ -567,12 +648,24 @@ levels.hypr <- function(x) {
   colnames(x@hmat)
 }
 
+nlevels.hypr <- function(x) {
+  check_argument(x, "hypr")
+  ncol(x@hmat)
+}
+
 #' @describeIn hypr Retrieve the levels (variable names) used in a \code{hypr} object
 #'
 #' @return A character vector of level names
 #'
 #' @export
 setMethod("levels", signature(x="hypr"), levels.hypr)
+
+#' @describeIn hypr Retrieve the number of levels (variable names) used in a \code{hypr} object
+#'
+#' @return An integer denoting the number of levels
+#'
+#' @export
+setMethod("nlevels", signature(x="hypr"), nlevels.hypr)
 
 names.hypr <- function(x) {
   check_argument(x, "hypr")
@@ -687,10 +780,6 @@ prepare_cmat <- function(value, add_intercept, remove_intercept) {
   value
 }
 
-which_intercept <- function(mat) which(apply(mat, 2, function(x) all(x[1]==x[-1])))
-
-has_intercept <- function(mat) length(which_intercept(mat) > 0)
-
 #' Retrieve or set contrast matrix
 #'
 #' Use these functions to retrieve or set a \code{hypr} object’s contrast matrix. If used for updating, the hypothesis matrix and equations are derived automatically.
@@ -733,12 +822,12 @@ cmat <- function(x, add_intercept = FALSE, remove_intercept = FALSE, as_fraction
   check_argument(add_intercept, c("NULL","logical"), 1)
   check_argument(remove_intercept, c("NULL","logical"), 1)
   check_argument(as_fractions, "logical", 1)
-  if(has_intercept(x@cmat) && missing(remove_intercept)) {
+  if(has_intercept(x) && missing(remove_intercept)) {
     warning("The contrast matrix you are retrieving appears to have an intercept column. If this is intentional, you can ignore this warning or suppress it by explictly calling cmat(..., remove_intercept=FALSE).")
   }
   value <- prepare_cmat(x@cmat, add_intercept, remove_intercept)
   if(isTRUE(as_fractions)) {
-    value <- MASS::as.fractions(value)
+    value <- as.fractions(value)
   }
   class(value) <- c("hypr_cmat", setdiff(class(value), "hypr_cmat"))
   value
@@ -788,16 +877,17 @@ contr.hypothesis <- function(..., add_intercept = FALSE, remove_intercept = NULL
 
 `contrasts<-.hypr` <- function(x, how.many, value) {
   if(inherits(value, "hypr")) {
+    value <- filler_contrasts(value, how.many)
     cm <- contr.hypothesis(value)
   } else if(inherits(value, "hypr_cmat")) {
     cm <- value
   }
-  if(!isTRUE(all.equal(levels(x), rownames(cm)))) {
+  if(!isTRUE(all.equal(make.names(levels(x)), make.names(rownames(cm))))) {
     warning(sprintf("The levels of the hypr object (%s) do not match the levels of the factor (%s). Please check the resulting contrast matrix for errors with contrasts(factor). To avoid errors and this warning, ensure that the order of factor levels and levels in hypr match, e.g. by creating your hypr object with hypr(..., levels = levels(factor)).",paste(rownames(cm), collapse = ", "),paste(levels(x), collapse=", ")))
   }
   ## match? cm <- cm[match(levels(x), rownames(cm)), , drop = FALSE]
   if(missing(how.many))
-    stats::contrasts(x) <- cm
+    stats::contrasts(x, how.many = ncol(cm)) <- cm
   else
     stats::contrasts(x, how.many) <- cm
   x
@@ -853,7 +943,162 @@ setMethod("contrasts<-", c(x="ANY",how.many="ANY",value="hypr_cmat"), `contrasts
 ginv2 <- function(x, as_fractions = TRUE) {
   check_argument(x, "matrix", "numeric")
   check_argument(as_fractions, "logical", 1)
-  y <- round(MASS::ginv(x), floor(-log10(.Machine$double.neg.eps) - 3))
+  y <- round(ginv(x), floor(-log10(.Machine$double.neg.eps) - 3))
   dimnames(y) <- dimnames(x)[2:1]
-  if(isTRUE(as_fractions)) MASS::fractions(y) else y
+  if(isTRUE(as_fractions)) fractions(y) else y
+}
+
+
+#' Intercept checks
+#'
+#' Non-centered contrasts require an intercept for correct specification of experimental hypotheses.
+#'
+#' There are functions available to check whether a \code{hypr} object contains an intercept (\code{has_intercept}) or which contrast is the intercept (\code{is_intercept}, \code{which_intercept}).
+#'
+#' @param x A hypr object
+#' @rdname is_intercept
+#' @return A single logical value (\code{has_intercept}), a logical vector (\code{is_intercept}), or an integer index vector (\code{which_intercept})
+#'
+#' @examples
+#'
+#' h1 <- hypr(mu1~0, mu2~mu1)
+#' h2 <- hypr(mu2~mu1, mu3~mu1)
+#'
+#' stopifnot(has_intercept(h1))
+#' stopifnot(!has_intercept(h2))
+#' stopifnot(which_intercept(h1) == 1)
+#' stopifnot(is_intercept(h1) == c(TRUE,FALSE))
+#'
+#' @export
+is_intercept <- function(x) apply(if(inherits(x, "hypr")) x@cmat else x, 2, function(y) all(abs(y[1]-y[-1])<=1e-5))
+
+#' @describeIn is_intercept Return indices, not a logical vector of intercept columns
+#' @export
+which_intercept <- function(x) which(is_intercept(x))
+
+
+#' @describeIn is_intercept Check whether any of the contrasts is an intercept
+#' @export
+has_intercept <- function(x) any(is_intercept(x))
+
+
+#' Contrast centering
+#'
+#' Centeredness of contrasts is critical for the interpretation of interactions and intercepts. There are functions available to check for centered contrasts and to realign contrasts so that they are centered.
+#'
+#' The function \code{centered_contrasts(x)} will return a copy of \code{x} where all contrasts were centered to a zero mean.
+#'
+#' The functions \code{is_centered(x)} and \code{which_centered()} indicate which contrasts of \code{x}, are centered. \code{all_centered(x)} will return \code{TRUE} if all contrasts in \code{x} are centered or \code{FALSE} if at least one contrast is not.
+#'
+#' @param x A hypr object
+#' @rdname centered_contrasts
+#' @return A centered set of hypr contrasts (\code{centered_contrasts}), a single logical value (\code{all_centered}), a logical vector (\code{is_centered}), or an integer index vector (\code{which_centered})
+#'
+#'
+#' @export
+centered_contrasts <- function(x) {
+  check_argument(x, "hypr")
+  cm <- cmat(x, add_intercept = FALSE, remove_intercept = FALSE)
+  means <- colMeans(cm)
+  means[which_intercept(cm)] <- 0
+  cm <- cm - rep(means, each = nrow(cm))
+  cmat(x, add_intercept = FALSE, remove_intercept = FALSE) <- cm
+  x
+}
+
+#' @describeIn centered_contrasts Check which contrasts of \code{x} are centered
+#' @export
+is_centered <- function(x) {
+  check_argument(x, "hypr")
+  as.logical(abs(colSums(x@cmat)) < 1e-5)
+}
+
+#' @describeIn centered_contrasts Check whether all contrasts of \code{x} are centered
+#' @param ignore_intercept If \code{TRUE}, the intercept is ignored
+#' @export
+all_centered <- function(x, ignore_intercept = TRUE) {
+  cc <- is_centered(x)
+  if(isTRUE(ignore_intercept)) {
+    all(cc[-which_intercept(x)])
+  } else {
+    all(cc)
+  }
+}
+
+#' @describeIn centered_contrasts Check which contrasts of \code{x} are centered
+#' @export
+which_centered <- function(x) which(is_centered(x))
+
+is_orthogonal <- function(x) {
+  check_argument(x, "hypr")
+  as.logical(abs(as.vector(cov(x@cmat, rep(1,nlevels(x))))) < 1e-5)
+}
+
+which_orthogonal <- function(x) which(is_orthogonal(x))
+
+
+
+
+minabsnz <- function(x) {
+  abs_x <- abs(x)
+  abs_x <- abs_x[abs_x > 1e-5]
+  if(length(abs_x)==0) return(x)
+  min(abs_x)
+}
+
+#' Generate filler contrasts
+#'
+#' Fill free degrees of freedom with orthogonal filler contrasts.
+#'
+#'
+#'
+#'
+#' @param x A hypr object
+#' @param how.many The total number of contrasts for the new hypr object
+#' @param rescale If \code{TRUE}, the contrast weights will be rescaled
+#'
+#'
+#' @examples
+#'
+#' # A complete Helmert contrast matrix for 4 levels:
+#' h1 <- hypr(~ (mu2-mu1)/2,
+#'           ~ (mu3-(mu1+mu2)/2)/3,
+#'           ~ (mu4-(mu1+mu2+mu3)/3)/4,
+#'           levels = c("mu1", "mu2", "mu3", "mu4")
+#'           )
+#' cmat(h1)
+#'
+#' # An incomplete Helmer contrast matrix (2nd contrast dropped)
+#' h2 <- hypr(~ (mu2-mu1)/2,
+#'            ~ (mu4-(mu1+mu2+mu3)/3)/4,
+#'            levels = c("mu1", "mu2", "mu3", "mu4")
+#'            )
+#' cmat(h2)
+#'
+#' # Filling the remaining degree of freedom retrieves the contrast
+#' h3 <- filler_contrasts(h2)
+#' cmat(h3)
+#'
+#' stopifnot(all.equal(cmat(h3)[,3], cmat(h1)[,2]))
+#'
+#' @export
+filler_contrasts <- function(x, how.many = nlevels(x), rescale = TRUE) {
+  check_argument(x, "hypr")
+  check_argument(how.many, "numeric")
+  check_argument(rescale, "logical")
+  if(how.many > nlevels(x)) stop("Cannot generate more contrasts than variables/levels!")
+  add_int <- !has_intercept(x)
+  cm <- cmat(x, add_intercept = add_int, remove_intercept = FALSE)
+  if(how.many < ncol(cm) - 1) {
+    cmat(x, add_intercept = FALSE, remove_intercept = add_int) <- cm[,seq_len(how.many+1),drop=FALSE]
+  } else if(how.many > ncol(cm) - 1) {
+    q <- qr(cm)
+    qy <- qr.qy(q, diag(nrow(cm)))
+    new_contrasts <- qy[,-seq_len(ncol(cm)),drop=FALSE]
+    if(rescale) {
+      new_contrasts <- new_contrasts / rep(apply(new_contrasts, 2, minabsnz), nrow(qy)) * minabsnz(cm)
+    }
+    cmat(x, add_intercept = FALSE, remove_intercept = add_int) <- cbind(cm, new_contrasts)
+  }
+  x
 }
