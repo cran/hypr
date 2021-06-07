@@ -2,6 +2,8 @@
 #' @importFrom methods as is new show
 #' @importFrom stats cov
 #' @importFrom MASS as.fractions fractions mvrnorm ginv
+#' @importFrom cli style_bold col_red col_grey
+#' @importFrom magrittr %>%
 NULL
 
 
@@ -106,26 +108,20 @@ check_argument <- function(val, ...) {
 setClass("hypr", slots=c(eqs = "list", hmat = "matrix", cmat = "matrix"))
 
 show.hypr <- function(object) {
-  cat_formatted <- function(txt, bold = FALSE, color = NULL) {
-    if(bold) cat("\033[1m")
-    if(!is.null(color)) cat(sprintf("\033[%dm", c("red" = 31, "green" = 32, "yellow"= 33, "blue" = 34, "gray" = 37, "dark_gray" = 38)[color]))
-    cat(txt)
-    if(!is.null(color)) cat("\033[39m")
-    if(bold) cat("\033[0m")
-  }
   check_argument(object, "hypr")
   hypr_call <- as.call(c(list(as.name("hypr")), formula(object), list(levels = levels(object))))
   if(length(object@eqs) == 0) {
     cat("This hypr object does not contain hypotheses.")
   } else {
     if(length(object@eqs) == 1) {
-      cat_formatted("hypr object containing one (1) null hypothesis:", bold = TRUE)
+      cat("hypr object containing one (1) null hypothesis:" %>% style_bold)
     } else {
-      cat_formatted(sprintf("hypr object containing %d null hypotheses:", length(object@eqs)), bold = TRUE)
+      cat(sprintf("hypr object containing %d null hypotheses:", length(object@eqs)) %>% style_bold)
     }
     cat("\n")
     eq.names <- sprintf("H0.%s", if(is.null(names(object@eqs))) seq_along(object@eqs) else names(object@eqs))
     dropped.hyps <- attr(object@hmat, "dropped.hyps")
+    kept.hyps <- setdiff(seq_along(object@eqs), dropped.hyps)
     eqs.str <- vapply(object@eqs, as.character.expr_sum, "")
     longest.eqs.str <- max(nchar(eqs.str))
     longest.eqs.name <- max(nchar(eq.names))
@@ -138,23 +134,28 @@ show.hypr <- function(object) {
         cat(strrep(" ", longest.eqs.str-nchar(eqs.str[i])))
         cat(" )")
       }
+      if(i %in% kept.hyps[which_intercept(object)]) {
+        cat(strrep(" ", longest.eqs.str-nchar(eqs.str[i])))
+        cat(col_grey("  (Intercept)"))
+      }
       cat("\n")
     }
     if(!is.null(attr(object@hmat, "dropped.hyps"))) {
-      cat_formatted("Note: Hypotheses in parentheses are not linearly independent and thus dropped from the hypothesis and contrast matrices!\n", color = "red")
+      cat("Note: Hypotheses in parentheses are not linearly independent and thus dropped from the hypothesis and contrast matrices!" %>% col_red)
+      cat("\n")
     }
     cat("\n")
-    cat_formatted("Call:", bold = TRUE)
+    cat("Call:" %>% style_bold)
     cat("\n")
     show(hypr_call)
     cat("\n")
-    cat_formatted("Hypothesis matrix (transposed):", bold = TRUE)
+    cat("Hypothesis matrix (transposed):" %>% style_bold)
     cat("\n")
     x <- t(object@hmat)
     attributes(x) <- list(dim = dim(x), dimnames = dimnames(x))
     show(fractions(x))
     cat("\n")
-    cat_formatted("Contrast matrix:", bold = TRUE)
+    cat("Contrast matrix:" %>% style_bold)
     cat("\n")
     x <- object@cmat
     attributes(x) <- list(dim = dim(x), dimnames = dimnames(x))
@@ -520,7 +521,12 @@ hypr <- function(..., levels = NULL, add_intercept = FALSE, remove_intercept = F
 }
 
 `*.hypr` <- function(e1, e2) {
-  e1 + e2 + (e1 & e2)
+  main <- e1 + e2
+  inter <- e1 & e2
+  cmat_comb <- cbind(cmat(main, remove_intercept = has_intercept(main)), cmat(inter, remove_intercept = has_intercept(inter)))
+  ret <- hypr()
+  cmat(ret, add_intercept = has_intercept(main) || has_intercept(inter)) <- cmat_comb
+  ret
 }
 
 `/.hypr` <- function(e1, e2) {
@@ -696,6 +702,7 @@ setMethod("names<-", signature(x="hypr"), `names<-.hypr`)
   check_argument(x, "hypr")
   check_argument(value, c("NULL","character"))
   mat <- hmat(x)
+  if(ncol(mat) != length(value)) stop(sprintf("Trying to assign %d new level names to hypr object with %d factor levels.", length(value), ncol(mat)))
   colnames(mat) <- value
   `hmat<-`(hypr(), mat)
 }
@@ -747,6 +754,29 @@ setMethod("formula", signature(x="hypr"), formula.hypr)
 #' @export
 setMethod("formula<-", signature(x="hypr"), `formula<-.hypr`)
 
+
+#' @describeIn is_intercept Add an intercept column if there is none
+#' @export
+add_intercept <- function(x) {
+  check_argument(x, "hypr")
+  if(!has_intercept(x)) {
+    if(nrow(x@cmat) == 0) {
+      stop("Cannot add an intercept to an empty hypr object!")
+    }
+    cmat(x, add_intercept = TRUE, remove_intercept = FALSE) <- x@cmat
+  }
+  x
+}
+
+#' @describeIn is_intercept Remove the intercept column if there is one
+#' @export
+remove_intercept <- function(x) {
+  check_argument(x, "hypr")
+  if(has_intercept(x)) {
+    cmat(x, add_intercept = FALSE, remove_intercept = TRUE) <- x@cmat
+  }
+  x
+}
 
 prepare_cmat <- function(value, add_intercept, remove_intercept) {
   intercept_col <- which_intercept(value)
@@ -951,13 +981,13 @@ ginv2 <- function(x, as_fractions = TRUE) {
 
 #' Intercept checks
 #'
-#' Non-centered contrasts require an intercept for correct specification of experimental hypotheses.
+#' Non-centered contrasts require an intercept for correct specification of experimental hypotheses. These functions enable the user to check for existance of intercepts and to add or remove intercept columns as needed.
 #'
-#' There are functions available to check whether a \code{hypr} object contains an intercept (\code{has_intercept}) or which contrast is the intercept (\code{is_intercept}, \code{which_intercept}).
+#' There are functions available to check whether a \code{hypr} object contains an intercept (\code{has_intercept}) or which contrast is the intercept (\code{is_intercept}, \code{which_intercept}). Moreover, if needed, the user can add (\code{add_intercept}) or remove (\code{remove_intercept}) an intercept column to/from a hypr object. \code{add_intercept} and \code{remove_intercept} do not throw an error if the user attempts to remove a non-existing intercept or add an intercept if there already is one.
 #'
 #' @param x A hypr object
 #' @rdname is_intercept
-#' @return A single logical value (\code{has_intercept}), a logical vector (\code{is_intercept}), or an integer index vector (\code{which_intercept})
+#' @return A single logical value (\code{has_intercept}), a logical vector (\code{is_intercept}), an integer index vector (\code{which_intercept}), or a modified hypr object (\code{add_intercept}, \code{remove_intercept})
 #'
 #' @examples
 #'
@@ -970,7 +1000,10 @@ ginv2 <- function(x, as_fractions = TRUE) {
 #' stopifnot(is_intercept(h1) == c(TRUE,FALSE))
 #'
 #' @export
-is_intercept <- function(x) apply(if(inherits(x, "hypr")) x@cmat else x, 2, function(y) all(abs(y[1]-y[-1])<=1e-5))
+is_intercept <- function(x) {
+  check_argument(x, c("hypr","matrix"))
+  apply(if(inherits(x, "hypr")) x@cmat else x, 2, function(y) all(abs(y[1]-y[-1])<=1e-5))
+}
 
 #' @describeIn is_intercept Return indices, not a logical vector of intercept columns
 #' @export
@@ -1017,6 +1050,8 @@ is_centered <- function(x) {
 #' @param ignore_intercept If \code{TRUE}, the intercept is ignored
 #' @export
 all_centered <- function(x, ignore_intercept = TRUE) {
+  check_argument(x, "hypr")
+  check_argument(ignore_intercept, "logical", 1)
   cc <- is_centered(x)
   if(isTRUE(ignore_intercept)) {
     all(cc[-which_intercept(x)])

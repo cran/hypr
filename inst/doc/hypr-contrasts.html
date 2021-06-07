@@ -371,23 +371,23 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## an intercept column. If this is intentional, you can ignore this warning or
 ## suppress it by explictly calling cmat(..., add_intercept=FALSE) &lt;- x.</code></pre>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>h</span></code></pre></div>
-<pre><code>## [1mhypr object containing 3 null hypotheses:[0m
+<pre><code>## hypr object containing 3 null hypotheses:
 ## H0.2: 0 = X2
 ## H0.3: 0 = X3
 ## H0.4: 0 = X4
 ## 
-## [1mCall:[0m
+## Call:
 ## hypr(`2` = X2 ~ 0, `3` = X3 ~ 0, `4` = X4 ~ 0, levels = c(&quot;X1&quot;, 
 ## &quot;X2&quot;, &quot;X3&quot;, &quot;X4&quot;))
 ## 
-## [1mHypothesis matrix (transposed):[0m
+## Hypothesis matrix (transposed):
 ##    2 3 4
 ## X1 0 0 0
 ## X2 1 0 0
 ## X3 0 1 0
 ## X4 0 0 1
 ## 
-## [1mContrast matrix:[0m
+## Contrast matrix:
 ##    2 3 4
 ## X1 0 0 0
 ## X2 1 0 0
@@ -396,24 +396,24 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p>When looking at the inferred equations, we can see that this contrast tests the significance of the treatments against zero. This is only appropriate if there is no baseline. However, we may want to consider a non-zero baseline. This is usually included in regression models. To let <code>hypr</code> know that we are including an intercept for the baseline, we can set the contrast matrix like this:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">cmat</span>(h, <span class="dt">add_intercept =</span> <span class="ot">TRUE</span>) &lt;-<span class="st"> </span><span class="kw">contr.treatment</span>(<span class="dv">4</span>)</span>
 <span id="cb9-2"><a href="#cb9-2"></a>h</span></code></pre></div>
-<pre><code>## [1mhypr object containing 4 null hypotheses:[0m
-## H0.Intercept: 0 = X1
+<pre><code>## hypr object containing 4 null hypotheses:
+## H0.Intercept: 0 = X1        (Intercept)
 ##         H0.2: 0 = -X1 + X2
 ##         H0.3: 0 = -X1 + X3
 ##         H0.4: 0 = -X1 + X4
 ## 
-## [1mCall:[0m
+## Call:
 ## hypr(Intercept = X1 ~ 0, `2` = -X1 + X2 ~ 0, `3` = -X1 + X3 ~ 
 ##     0, `4` = -X1 + X4 ~ 0, levels = c(&quot;X1&quot;, &quot;X2&quot;, &quot;X3&quot;, &quot;X4&quot;))
 ## 
-## [1mHypothesis matrix (transposed):[0m
+## Hypothesis matrix (transposed):
 ##    Intercept 2  3  4 
 ## X1  1        -1 -1 -1
 ## X2  0         1  0  0
 ## X3  0         0  1  0
 ## X4  0         0  0  1
 ## 
-## [1mContrast matrix:[0m
+## Contrast matrix:
 ##    Intercept 2 3 4
 ## X1 1         0 0 0
 ## X2 1         1 0 0

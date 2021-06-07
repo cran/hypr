@@ -359,25 +359,25 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>trtC &lt;-<span class="st"> </span><span class="kw">hypr</span>(<span class="dt">base =</span> mu0<span class="op">~</span><span class="dv">0</span>, <span class="dt">trt1 =</span> mu1<span class="op">~</span>mu0, <span class="dt">trt2 =</span> mu2<span class="op">~</span>mu0, <span class="dt">trt3 =</span> mu3<span class="op">~</span>mu0)</span></code></pre></div>
 <p>When calling this function, a <code>hypr</code> object named <code>trtC</code> is generated which contains all four hypotheses from above as well as the hypothesis and contrast matrices derived from those. We can display a summary like any other object in R:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>trtC</span></code></pre></div>
-<pre><code>## [1mhypr object containing 4 null hypotheses:[0m
-## H0.base: 0 = mu0
+<pre><code>## hypr object containing 4 null hypotheses:
+## H0.base: 0 = mu0        (Intercept)
 ## H0.trt1: 0 = mu1 - mu0
 ## H0.trt2: 0 = mu2 - mu0
 ## H0.trt3: 0 = mu3 - mu0
 ## 
-## [1mCall:[0m
+## Call:
 ## hypr(base = mu0 ~ 0, trt1 = mu1 - mu0 ~ 0, trt2 = mu2 - mu0 ~ 
 ##     0, trt3 = mu3 - mu0 ~ 0, levels = c(&quot;mu0&quot;, &quot;mu1&quot;, &quot;mu2&quot;, 
 ## &quot;mu3&quot;))
 ## 
-## [1mHypothesis matrix (transposed):[0m
+## Hypothesis matrix (transposed):
 ##     base trt1 trt2 trt3
 ## mu0  1   -1   -1   -1  
 ## mu1  0    1    0    0  
 ## mu2  0    0    1    0  
 ## mu3  0    0    0    1  
 ## 
-## [1mContrast matrix:[0m
+## Contrast matrix:
 ##     base trt1 trt2 trt3
 ## mu0 1    0    0    0   
 ## mu1 1    1    0    0   
@@ -385,24 +385,24 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## mu3 1    0    0    1</code></pre>
 <p>As you can see, the level names in <code>hypr</code> objects are automatically derived from the hypotheses and sorted alphabetically. You may also provide a different sorting by explicitly providing level names for the <code>levels</code> argument:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">hypr</span>(one<span class="op">~</span><span class="dv">0</span>, two<span class="op">~</span>one, three<span class="op">~</span>one, four<span class="op">~</span>one, <span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;one&quot;</span>, <span class="st">&quot;two&quot;</span>, <span class="st">&quot;three&quot;</span>, <span class="st">&quot;four&quot;</span>))</span></code></pre></div>
-<pre><code>## [1mhypr object containing 4 null hypotheses:[0m
-## H0.1: 0 = one
+<pre><code>## hypr object containing 4 null hypotheses:
+## H0.1: 0 = one          (Intercept)
 ## H0.2: 0 = two - one
 ## H0.3: 0 = three - one
 ## H0.4: 0 = four - one
 ## 
-## [1mCall:[0m
+## Call:
 ## hypr(one ~ 0, two - one ~ 0, three - one ~ 0, four - one ~ 0, 
 ##     levels = c(&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;))
 ## 
-## [1mHypothesis matrix (transposed):[0m
+## Hypothesis matrix (transposed):
 ##       [,1] [,2] [,3] [,4]
 ## one    1   -1   -1   -1  
 ## two    0    1    0    0  
 ## three  0    0    1    0  
 ## four   0    0    0    1  
 ## 
-## [1mContrast matrix:[0m
+## Contrast matrix:
 ##       [,1] [,2] [,3] [,4]
 ## one   1    0    0    0   
 ## two   1    1    0    0   
@@ -411,17 +411,17 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <p>In the example above, a <code>hypr</code> object is created in which the hypothesis and contrast matrices are ordered <code>one</code>, <code>two</code>, <code>three</code>, <code>four</code>. If <code>levels</code> was not provided, the matrices in the resulting object would be ordered alphabetically, i.e. <code>four</code>, <code>one</code>, <code>three</code>, <code>two</code>.</p>
 <p>The character vector passed as the <code>levels</code> argument must contain all levels named in the hypotheses. If it does not, an error will be thrown. However, it <em>may</em> contain level names that are not named in any of the null hypotheses. This will expand the hypothesis and contrast matrices by that level but not affect the coding of the other levels:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">hypr</span>(one<span class="op">~</span><span class="dv">0</span>, two<span class="op">~</span>one, three<span class="op">~</span>one, four<span class="op">~</span>one, <span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;one&quot;</span>, <span class="st">&quot;two&quot;</span>, <span class="st">&quot;three&quot;</span>, <span class="st">&quot;four&quot;</span>, <span class="st">&quot;five&quot;</span>))</span></code></pre></div>
-<pre><code>## [1mhypr object containing 4 null hypotheses:[0m
+<pre><code>## hypr object containing 4 null hypotheses:
 ## H0.1: 0 = one
 ## H0.2: 0 = two - one
 ## H0.3: 0 = three - one
 ## H0.4: 0 = four - one
 ## 
-## [1mCall:[0m
+## Call:
 ## hypr(one ~ 0, two - one ~ 0, three - one ~ 0, four - one ~ 0, 
 ##     levels = c(&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;, &quot;five&quot;))
 ## 
-## [1mHypothesis matrix (transposed):[0m
+## Hypothesis matrix (transposed):
 ##       [,1] [,2] [,3] [,4]
 ## one    1   -1   -1   -1  
 ## two    0    1    0    0  
@@ -429,7 +429,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## four   0    0    0    1  
 ## five   0    0    0    0  
 ## 
-## [1mContrast matrix:[0m
+## Contrast matrix:
 ##       [,1] [,2] [,3] [,4]
 ## one   1    0    0    0   
 ## two   1    1    0    0   
@@ -481,24 +481,24 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>otherC &lt;-<span class="st"> </span><span class="kw">hypr</span>()</span>
 <span id="cb22-2"><a href="#cb22-2"></a><span class="kw">cmat</span>(otherC) &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="dt">int =</span> <span class="dv">1</span>, <span class="kw">contr.treatment</span>(<span class="dv">4</span>)) <span class="co"># add intercept to treatment contrast</span></span>
 <span id="cb22-3"><a href="#cb22-3"></a>otherC</span></code></pre></div>
-<pre><code>## [1mhypr object containing 4 null hypotheses:[0m
-## H0.int: 0 = X1
+<pre><code>## hypr object containing 4 null hypotheses:
+## H0.int: 0 = X1        (Intercept)
 ##   H0.2: 0 = -X1 + X2
 ##   H0.3: 0 = -X1 + X3
 ##   H0.4: 0 = -X1 + X4
 ## 
-## [1mCall:[0m
+## Call:
 ## hypr(int = X1 ~ 0, `2` = -X1 + X2 ~ 0, `3` = -X1 + X3 ~ 0, `4` = -X1 + 
 ##     X4 ~ 0, levels = c(&quot;X1&quot;, &quot;X2&quot;, &quot;X3&quot;, &quot;X4&quot;))
 ## 
-## [1mHypothesis matrix (transposed):[0m
+## Hypothesis matrix (transposed):
 ##    int 2  3  4 
 ## X1  1  -1 -1 -1
 ## X2  0   1  0  0
 ## X3  0   0  1  0
 ## X4  0   0  0  1
 ## 
-## [1mContrast matrix:[0m
+## Contrast matrix:
 ##    int 2 3 4
 ## X1 1   0 0 0
 ## X2 1   1 0 0
