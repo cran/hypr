@@ -171,9 +171,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## H0.trt3: 0 = mu3 - mu0
 ## 
 ## Call:
-## hypr(base = mu0 ~ 0, trt1 = mu1 - mu0 ~ 0, trt2 = mu2 - mu0 ~ 
-##     0, trt3 = mu3 - mu0 ~ 0, levels = c(&quot;mu0&quot;, &quot;mu1&quot;, &quot;mu2&quot;, 
-## &quot;mu3&quot;))
+## hypr(base = ~mu0, trt1 = ~mu1 - mu0, trt2 = ~mu2 - mu0, trt3 = ~mu3 - 
+##     mu0, levels = c(&quot;mu0&quot;, &quot;mu1&quot;, &quot;mu2&quot;, &quot;mu3&quot;))
 ## 
 ## Hypothesis matrix (transposed):
 ##     base trt1 trt2 trt3
@@ -197,8 +196,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## H0.4: 0 = four - one
 ## 
 ## Call:
-## hypr(one ~ 0, two - one ~ 0, three - one ~ 0, four - one ~ 0, 
-##     levels = c(&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;))
+## hypr(~one, ~two - one, ~three - one, ~four - one, levels = c(&quot;one&quot;, 
+## &quot;two&quot;, &quot;three&quot;, &quot;four&quot;))
 ## 
 ## Hypothesis matrix (transposed):
 ##       [,1] [,2] [,3] [,4]
@@ -223,8 +222,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## H0.4: 0 = four - one
 ## 
 ## Call:
-## hypr(one ~ 0, two - one ~ 0, three - one ~ 0, four - one ~ 0, 
-##     levels = c(&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;, &quot;five&quot;))
+## hypr(~one, ~two - one, ~three - one, ~four - one, levels = c(&quot;one&quot;, 
+## &quot;two&quot;, &quot;three&quot;, &quot;four&quot;, &quot;five&quot;))
 ## 
 ## Hypothesis matrix (transposed):
 ##       [,1] [,2] [,3] [,4]
@@ -247,16 +246,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>These properties can also be directly accessed with the appropriate methods:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">formula</span>(trtC) <span class="co"># a list of equations</span></span></code></pre></div>
 <pre><code>## $base
-## mu0 ~ 0
+## ~mu0
 ## 
 ## $trt1
-## mu1 - mu0 ~ 0
+## ~mu1 - mu0
 ## 
 ## $trt2
-## mu2 - mu0 ~ 0
+## ~mu2 - mu0
 ## 
 ## $trt3
-## mu3 - mu0 ~ 0</code></pre>
+## ~mu3 - mu0</code></pre>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(trtC) <span class="co"># a vector of corresponding factor levels (variables in equations)</span></span></code></pre></div>
 <pre><code>## [1] &quot;mu0&quot; &quot;mu1&quot; &quot;mu2&quot; &quot;mu3&quot;</code></pre>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(trtC) <span class="co"># a vector of corresponding contrast names</span></span></code></pre></div>
@@ -293,8 +292,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##   H0.4: 0 = -X1 + X4
 ## 
 ## Call:
-## hypr(int = X1 ~ 0, `2` = -X1 + X2 ~ 0, `3` = -X1 + X3 ~ 0, `4` = -X1 + 
-##     X4 ~ 0, levels = c(&quot;X1&quot;, &quot;X2&quot;, &quot;X3&quot;, &quot;X4&quot;))
+## hypr(int = ~X1, `2` = ~-X1 + X2, `3` = ~-X1 + X3, `4` = ~-X1 + 
+##     X4, levels = c(&quot;X1&quot;, &quot;X2&quot;, &quot;X3&quot;, &quot;X4&quot;))
 ## 
 ## Hypothesis matrix (transposed):
 ##    int 2  3  4 

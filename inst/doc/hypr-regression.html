@@ -213,7 +213,7 @@ H_{0_4}:&amp; \; \mu_4 = \mu_1
 ## H0.4: 0 = mu4 - mu1
 ## 
 ## Call:
-## hypr(mu1 ~ 0, mu2 - mu1 ~ 0, mu3 - mu1 ~ 0, mu4 - mu1 ~ 0, levels = c(&quot;mu1&quot;, 
+## hypr(~mu1, ~mu2 - mu1, ~mu3 - mu1, ~mu4 - mu1, levels = c(&quot;mu1&quot;, 
 ## &quot;mu2&quot;, &quot;mu3&quot;, &quot;mu4&quot;))
 ## 
 ## Hypothesis matrix (transposed):
@@ -262,10 +262,10 @@ H_{0_3}:&amp; \; \mu_3 = \frac{\mu_1 + \mu_2 + \mu_3 + \mu_4}{4}
 ## H0.3: 0 = (3*mu3 - mu1 - mu2 - mu4)/4
 ## 
 ## Call:
-## hypr(3/4 * mu1 - 1/4 * mu2 - 1/4 * mu3 - 1/4 * mu4 ~ 0, 3/4 * 
-##     mu2 - 1/4 * mu1 - 1/4 * mu3 - 1/4 * mu4 ~ 0, 3/4 * mu3 - 
-##     1/4 * mu1 - 1/4 * mu2 - 1/4 * mu4 ~ 0, levels = c(&quot;mu1&quot;, 
-## &quot;mu2&quot;, &quot;mu3&quot;, &quot;mu4&quot;))
+## hypr(~3/4 * mu1 - 1/4 * mu2 - 1/4 * mu3 - 1/4 * mu4, ~3/4 * mu2 - 
+##     1/4 * mu1 - 1/4 * mu3 - 1/4 * mu4, ~3/4 * mu3 - 1/4 * mu1 - 
+##     1/4 * mu2 - 1/4 * mu4, levels = c(&quot;mu1&quot;, &quot;mu2&quot;, &quot;mu3&quot;, &quot;mu4&quot;
+## ))
 ## 
 ## Hypothesis matrix (transposed):
 ##     [,1] [,2] [,3]

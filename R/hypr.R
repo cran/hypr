@@ -4,8 +4,10 @@
 #' @importFrom MASS as.fractions fractions mvrnorm ginv
 #' @importFrom cli style_bold col_red col_grey
 #' @importFrom magrittr %>%
+#' @importFrom Matrix Matrix
 NULL
 
+setClass("hypr_cmat", contains = "matrix")
 
 check_argument <- function(val, ...) {
   val <- tryCatch(val, error = function(e) e)
@@ -109,7 +111,7 @@ setClass("hypr", slots=c(eqs = "list", hmat = "matrix", cmat = "matrix"))
 
 show.hypr <- function(object) {
   check_argument(object, "hypr")
-  hypr_call <- as.call(c(list(as.name("hypr")), formula(object), list(levels = levels(object))))
+  hypr_call <- as.call(object)
   if(length(object@eqs) == 0) {
     cat("This hypr object does not contain hypotheses.")
   } else {
@@ -685,6 +687,18 @@ names.hypr <- function(x) {
 #' @export
 setMethod("names", signature(x="hypr"), names.hypr)
 
+as.call.hypr <- function(x) {
+  check_argument(x, "hypr")
+  as.call(c(list(as.name("hypr")), formula(x), list(levels = levels(x))))
+}
+
+#' @describeIn hypr Transform \code{hypr} object to a reproducible function call
+#'
+#' @return A \code{call} object that reproduces the \code{hypr} object
+#'
+#' @export
+setMethod("as.call", signature(x="hypr"), as.call.hypr)
+
 `names<-.hypr` <- function(x, value) {
   check_argument(x, "hypr")
   check_argument(value, c("NULL","character"))
@@ -907,7 +921,9 @@ contr.hypothesis <- function(..., add_intercept = FALSE, remove_intercept = NULL
 
 `contrasts<-.hypr` <- function(x, how.many, value) {
   if(inherits(value, "hypr")) {
-    value <- filler_contrasts(value, how.many)
+    if(!missing(how.many)) {
+      value <- filler_contrasts(value, how.many)
+    }
     cm <- contr.hypothesis(value)
   } else if(inherits(value, "hypr_cmat")) {
     cm <- value
@@ -926,11 +942,11 @@ contr.hypothesis <- function(..., add_intercept = FALSE, remove_intercept = NULL
 #' @describeIn cmat Update factor contrasts
 #' @param how.many see \code{\link[stats:contrasts]{stats::contrasts()}}
 #' @export
-setMethod("contrasts<-", c(x="ANY",how.many="ANY",value="hypr"), `contrasts<-.hypr`)
+setMethod("contrasts<-", c(x="factor",how.many="ANY",value="hypr"), `contrasts<-.hypr`)
 
 #' @describeIn cmat Update factor contrasts
 #' @export
-setMethod("contrasts<-", c(x="ANY",how.many="ANY",value="hypr_cmat"), `contrasts<-.hypr`)
+setMethod("contrasts<-", c(x="factor",how.many="ANY",value="hypr_cmat"), `contrasts<-.hypr`)
 
 #' @describeIn cmat Update contrast matrix with sensible intercept default
 #' @export
@@ -1137,3 +1153,4 @@ filler_contrasts <- function(x, how.many = nlevels(x), rescale = TRUE) {
   }
   x
 }
+

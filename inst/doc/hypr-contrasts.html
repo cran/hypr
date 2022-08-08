@@ -182,8 +182,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## H0.4: 0 = X4
 ## 
 ## Call:
-## hypr(`2` = X2 ~ 0, `3` = X3 ~ 0, `4` = X4 ~ 0, levels = c(&quot;X1&quot;, 
-## &quot;X2&quot;, &quot;X3&quot;, &quot;X4&quot;))
+## hypr(`2` = ~X2, `3` = ~X3, `4` = ~X4, levels = c(&quot;X1&quot;, &quot;X2&quot;, 
+## &quot;X3&quot;, &quot;X4&quot;))
 ## 
 ## Hypothesis matrix (transposed):
 ##    2 3 4
@@ -208,8 +208,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##         H0.4: 0 = -X1 + X4
 ## 
 ## Call:
-## hypr(Intercept = X1 ~ 0, `2` = -X1 + X2 ~ 0, `3` = -X1 + X3 ~ 
-##     0, `4` = -X1 + X4 ~ 0, levels = c(&quot;X1&quot;, &quot;X2&quot;, &quot;X3&quot;, &quot;X4&quot;))
+## hypr(Intercept = ~X1, `2` = ~-X1 + X2, `3` = ~-X1 + X3, `4` = ~-X1 + 
+##     X4, levels = c(&quot;X1&quot;, &quot;X2&quot;, &quot;X3&quot;, &quot;X4&quot;))
 ## 
 ## Hypothesis matrix (transposed):
 ##    Intercept 2  3  4 
