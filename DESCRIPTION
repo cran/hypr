@@ -3,7 +3,7 @@ Type: Package
 Title: Hypothesis Matrix Translation
 URL: https://maxrabe.com/hypr
 BugReports: https://github.com/mmrabe/hypr/issues
-Version: 0.2.3
+Version: 0.2.4
 Authors@R: c(
     person(given = "Maximilian M.", family = "Rabe", email = "maximilian.rabe@uni-potsdam.de", role = c("aut","cre"), comment = c(ORCID = "0000-0002-2556-5644")),
     person(given = "Shravan", family = "Vasishth", role = c("aut"), comment = c(ORCID = "0000-0003-2027-1994")),
@@ -17,10 +17,10 @@ Imports: MASS, pracma, methods, cli, magrittr, Matrix,
 Suggests: knitr, rmarkdown,
 VignetteBuilder: knitr
 Encoding: UTF-8
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 Collate: 'equations.R' 'hypr.R'
 NeedsCompilation: no
-Packaged: 2022-07-28 10:10:00 UTC; max
+Packaged: 2023-09-14 12:21:22 UTC; max
 Author: Maximilian M. Rabe [aut, cre] (<https://orcid.org/0000-0002-2556-5644>),
   Shravan Vasishth [aut] (<https://orcid.org/0000-0003-2027-1994>),
   Sven Hohenstein [aut] (<https://orcid.org/0000-0002-9708-1593>),
@@ -28,4 +28,4 @@ Author: Maximilian M. Rabe [aut, cre] (<https://orcid.org/0000-0002-2556-5644>),
   Daniel J. Schad [aut] (<https://orcid.org/0000-0003-2586-6823>)
 Maintainer: Maximilian M. Rabe <maximilian.rabe@uni-potsdam.de>
 Repository: CRAN
-Date/Publication: 2022-08-08 10:20:02 UTC
+Date/Publication: 2023-09-14 12:50:02 UTC
